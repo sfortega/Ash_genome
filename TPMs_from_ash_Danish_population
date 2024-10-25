@@ -1,0 +1,35 @@
+library(tidyverse)
+##::install("tximport")
+##BiocManager::install("biomaRt")
+#BiocManager::install("ensembldb")
+library(GenomicFeatures)
+library(tximport)
+library(dplyr)
+sample_table=read.table("list_salmon.txt",header=F)
+
+####
+in bash
+####
+file=list_UK.txt
+while read -r line;do
+        sed -e 's/transcript://g' ./RPKM_genome/${line}_salmon.sf > ./RPKM_genome/${line}_salmon_mod.sf
+done < "$file"
+####
+in R
+####
+sample_table=mutate(sample_table,files=paste0(".../RPKM/", V1,"_salmon_mod.sf"))
+count_files=pull(sample_table,files)
+names(count_files)=pull(sample_table,V1)
+gffFile <- system.file("extdata","GFF3_files","default_gFACs_entap_unique_out.gff3",package="GenomicFeatures")
+
+ash_txdb <- makeTxDbFromGFF(file = "default_gFACs_entap_unique_out.gff3",format="gff3")
+k <- keys(ash_txdb, keytype = "TXNAME")
+txdb <- AnnotationDbi::select(ash_txdb, k, "GENEID", "TXNAME")
+
+
+quant_table=tximport(count_files,type="salmon",tx2gene = txdb,ignoreTxversion=T)
+####dont add any true or anything in quant_table
+write.table(quant_table[["abundance"]],"abundance_table_salmon_ash.txt",col.names =T,sep="\t",row.names = T)
+write.table(quant_table[["counts"]],"counts_table_salmon_ash.txt",col.names =T,sep="\t",row.names = T)
+write.table(quant_table[["length"]],"length_table_salmon_ash.txt",col.names =T,sep="\t",row.names = T)
+saveRDS(quant_table, "tximport.rds")
