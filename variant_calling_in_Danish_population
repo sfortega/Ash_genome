@@ -1,0 +1,343 @@
+############################
+##DANISH VARIANT CALLING
+############################
+
+####download 
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977595/ERR977595.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977596/ERR977596.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977597/ERR977597.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977598/ERR977598.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977599/ERR977599.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977600/ERR977600.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977601/ERR977601.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977602/ERR977602.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977603/ERR977603.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977604/ERR977604.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977605/ERR977605.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977606/ERR977606.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977607/ERR977607.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977608/ERR977608.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977609/ERR977609.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977610/ERR977610.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977611/ERR977611.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977612/ERR977612.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977613/ERR977613.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977614/ERR977614.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977615/ERR977615.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977616/ERR977616.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977617/ERR977617.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977618/ERR977618.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977619/ERR977619.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977620/ERR977620.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977621/ERR977621.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977622/ERR977622.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977623/ERR977623.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977624/ERR977624.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977625/ERR977625.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977626/ERR977626.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977627/ERR977627.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977628/ERR977628.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977629/ERR977629.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977630/ERR977630.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977631/ERR977631.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977632/ERR977632.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977633/ERR977633.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977634/ERR977634.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977635/ERR977635.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977636/ERR977636.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977637/ERR977637.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977638/ERR977638.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977639/ERR977639.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977640/ERR977640.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977641/ERR977641.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977642/ERR977642.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977643/ERR977643.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977644/ERR977644.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977645/ERR977645.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977646/ERR977646.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977647/ERR977647.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977648/ERR977648.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977649/ERR977649.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977650/ERR977650.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977651/ERR977651.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977652/ERR977652.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977653/ERR977653.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977654/ERR977654.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977655/ERR977655.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977656/ERR977656.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977657/ERR977657.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977658/ERR977658.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977659/ERR977659.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977660/ERR977660.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977661/ERR977661.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977662/ERR977662.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977663/ERR977663.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977664/ERR977664.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977665/ERR977665.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977666/ERR977666.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977667/ERR977667.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977668/ERR977668.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977669/ERR977669.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977670/ERR977670.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977671/ERR977671.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977672/ERR977672.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977673/ERR977673.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977674/ERR977674.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977675/ERR977675.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977676/ERR977676.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977677/ERR977677.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977678/ERR977678.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977679/ERR977679.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977680/ERR977680.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977681/ERR977681.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977682/ERR977682.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977683/ERR977683.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977684/ERR977684.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977685/ERR977685.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977686/ERR977686.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977687/ERR977687.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977688/ERR977688.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977689/ERR977689.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977690/ERR977690.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977691/ERR977691.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977692/ERR977692.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977693/ERR977693.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977694/ERR977694.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977695/ERR977695.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977696/ERR977696.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977697/ERR977697.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977698/ERR977698.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977699/ERR977699.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977700/ERR977700.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977701/ERR977701.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977702/ERR977702.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977703/ERR977703.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977704/ERR977704.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977705/ERR977705.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977706/ERR977706.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977707/ERR977707.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977708/ERR977708.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977709/ERR977709.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977710/ERR977710.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977711/ERR977711.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977712/ERR977712.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977713/ERR977713.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977714/ERR977714.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977715/ERR977715.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977716/ERR977716.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977717/ERR977717.fastq.gz
+wget -P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977718/ERR977718.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977719/ERR977719.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977720/ERR977720.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977721/ERR977721.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977722/ERR977722.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977723/ERR977723.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977724/ERR977724.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977725/ERR977725.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977726/ERR977726.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977727/ERR977727.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977728/ERR977728.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977729/ERR977729.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977730/ERR977730.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977731/ERR977731.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977732/ERR977732.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977733/ERR977733.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977734/ERR977734.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977735/ERR977735.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977736/ERR977736.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977737/ERR977737.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977738/ERR977738.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977739/ERR977739.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977740/ERR977740.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977741/ERR977741.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977742/ERR977742.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977743/ERR977743.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977744/ERR977744.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977745/ERR977745.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977746/ERR977746.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977747/ERR977747.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977748/ERR977748.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977749/ERR977749.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977750/ERR977750.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977751/ERR977751.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977752/ERR977752.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977753/ERR977753.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977754/ERR977754.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977755/ERR977755.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977756/ERR977756.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977757/ERR977757.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977758/ERR977758.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977759/ERR977759.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977760/ERR977760.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977761/ERR977761.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977762/ERR977762.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977763/ERR977763.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977764/ERR977764.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977765/ERR977765.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977766/ERR977766.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977767/ERR977767.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977768/ERR977768.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977769/ERR977769.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977770/ERR977770.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977771/ERR977771.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977772/ERR977772.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977773/ERR977773.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977774/ERR977774.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977775/ERR977775.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977776/ERR977776.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977777/ERR977777.fastq.gz
+wget-P Danish/ ftp.sra.ebi.ac.uk/vol1/fastq/ERR977/ERR977778/ERR977778.fastq.gz
+
+############################PART 1. TRIMMOMATIC
+file=list_danish.txt
+while read -r line; do#
+	java -jar trimmomatic-0.39.jar PE Danish/${line}.fastq.gz Danish/Danish_trimmomatic/${line}_forward_paired.gz Danish/Danish_trimmomatic/${line}_forward_unpaired.gz Danish/Danish_trimmomatic/${line}_reverse_paired.fastq.gz Danish/Danish_trimmomatic/${line}_reverse_unpaired.fastq.gz LEADING:3 TRAILING:3 MINLEN:36
+done < "$file"
+
+###soflink genome ref
+ln -s pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta
+ile=list_Danish.txt
+
+mkdir Danish_star
+STAR --runMode genomeGenerate --runThreadN 40 --genomeDir star_genome --genomeFastaFiles pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta
+java -Xmx7g -jar chloroplast_phylogeny_196_UK/ash_RNAseq_2017/picard.jar CreateSequenceDictionary R=genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta O=reference.dict
+samtools faidx  genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta
+###changed name to reference.fasta, reference.dict reference.fasta.fai
+
+############################PART 2. USE GATK TO OBTAIN VARIANTS
+while read -r line; do
+ STAR --twopassMode Basic --genomeDir star_genome --runThreadN 40 --outSAMmapqUnique 60 --readFilesIn Danish/Danish_trimmomatic/${line}_trimmomatic_out.gz --readFilesCommand zcat --outFileNamePrefix star_Danish_${line} --outSAMtype BAM Unsorted
+ samtools sort Danish/star_Danish_${line}Aligned.out.bam --threads $SLURM_CPUS_PER_TASK -o Danish/Danish_star/star_Danish_${line}_aligned_sorted.out.bam 
+ samtools index Danish/Danish_star/star_Danish_${line}_aligned_sorted.out.bam
+ samtools flagstat Danish/Danish_star/star_Danish_${line}_aligned_sorted.out.bam > flagstat_Danish_${line}.txt
+ java -Xmx7g -jar picard.jar MarkDuplicates --INPUT Danish/Danish_star/star_Danish_${line}_aligned_sorted.out.bam --METRICS_FILE Danish/Danish_star/metrics_star_Danish_${line}_aligned_sorted_duplicates --OUTPUT Danish/Danish_star/star_Danish_${line}_aligned_sorted_duplicates.out.bam
+ samtools sort Danish/star_Danish_${line}_aligned_sorted_duplicates.out.bam --threads $SLURM_CPUS_PER_TASK -o Danish_star/star_Danish_${line}_aligned_sorted_duplicates_sorted.out.bam 
+ ##validate SAM/BAM
+ ####errorsinmissinggrupsand tagMN,so add in gatk ignore=missing_tag_Mn
+ java -Xmx7g -jar picard.jar ValidateSamFile I=Danish/Danish_star/star_Danish_${line}_aligned_sorted_duplicates.out.bam MODE=SUMMARY
+ java -Xmx7g -jar picard.jar AddOrReplaceReadGroups I=Danish/Danish_star/star_Danish_${line}_aligned_sorted_duplicates.out.bam O=Danish/Danish_star/star_Danish_${line}_aligned_sorted_duplicates_corrected.out.bam RGID=${line} RGLB=lib1 RGPL=illumina RGPU=Danish RGSM=${line}
+samtools index Danish/Danish_star/star_Danish_${line}_aligned_sorted_duplicates_corrected.out.bam
+gatk --java-options "-Xmx7g" HaplotypeCaller -I Danish/Danish_star/star_Danish_${line}_aligned_sorted_duplicates_corrected.out.bam -R reference.fasta -O Danish/Danish_star/star_Danish_${line}_aligned_sorted_duplicates.output_variants.g.vcf -ERC GVCF
+gatk VariantFiltration \
+   -R reference.fasta \
+   -V Danish/Danish_star/star_Danish_${line}_aligned_sorted_duplicates.output_variants.g.vcf \
+   -O Danish/Danish_star/star_Danish_${line}_aligned_sorted_duplicates.output_variants_filtered_variant_output.g.vcf \
+   --filter-name "QD" \
+   --filter-expression "QD < 2.0" \
+   --filter-name "QUAL" \
+   --filter-expression "QUAL < 30.0" \
+   --filter-name "MQRankSum" \
+   --filter-expression "MQRankSum < -2.5"
+   --filter-name "MQ" \
+   --filter-expression "MQ < 40"
+   --filter-name "FS60" \
+   --filter-expression "FS > 60"
+   --filter-name "SOR" \
+   --filter-expression "SOR > 3"
+   --filter-name "ReadPosRankSum" \
+   --filter-expression "ReadPosRankSum < -8.0"
+done < "$file"
+
+############################PART 3. mapping coverage of each file
+file=list_Danish.txt
+while read -r line; do
+ awk 'NR==10' ./star_Danish_${line}_STARpass1/Log.final.out > ${line}_log.txt
+done <"$file"
+
+cat ERR*_log.txt > all_Danish_mapping_log.txt
+
+
+############################PART 4. COMBINE and FILTER
+#####combine vcf files and filter
+mkdir all_vcf_Danish
+find ./Danish_star -type -f -name ".filtered_variant_output.g.vcf" >input.list ###need add users/sfo503///in file
+
+###give more memjava 20g and lots of time
+gatk CombineGVCFs --java-options "-Xmx20g" -R reference.fasta --variant star_Danish_all_combined.vcf --variant Danish/Danish_star/star_Danish_ERR977624_aligned_sorted_duplicates.output_variants_filtered_variant_output.g.vcf --variant  ./Danish_star/star_Danish_ERR977658_aligned_sorted_duplicates.output_variants_filtered_variant_output.g.vcf -O star_Danish_all_combined_all.vcf
+####now apply genotypes
+gatk GenotypeGVCFs --java-options "-Xmx40g" -R reference.fasta --variant star_Danish_all_combined_all.vcf -O ./all_vcf_Danish/star_Danish_all_combined_genotypes_all.vcf
+gatk CountVariants --java-options "-Xmx20g" -V  ./all_vcf_Danish/star_Danish_all_combined_genotypes.vcf
+cp star_Danish_all_combined.vcf ./all_vcf_Danish
+
+##############filtering genotypes
+vcftools --vcf star_Danish_all_combined_genotypes_all.vcf --max-missing 0.25 --minQ 30 --max-alleles 3 --remove-indels --min-meanDP 10 --out   star_Danish_all_combined_genotypes_SNPs_filtered_all  --recode --recode-INFO-all
+vcftools --vcf star_Danish_all_combined_genotypes_SNPs_filtered_all.recode.vcf --min-alleles 2 --mac 5 --out star_Danish_all_combined_genotypes_SNPs_filtered_all_2 --recode --recode-INFO-all
+
+#### REMOVE THE TWO SAMPLES NOT IN TRAIT DATA
+vcftools --remove-indv ERR977600 --vcf star_Danish_all_combined_genotypes_SNPs_filtered_all_2_ordered.vcf --out star_Danish_all_combined_genotypes_SNPs_filtered_all_2_ordered_one_less.vcf --recode --recode-INFO-all
+vcftools --remove-indv ERR977601 --vcf star_Danish_all_combined_genotypes_SNPs_filtered_all_2_ordered_one_less.vcf.recode.vcf --out star_Danish_all_combined_genotypes_SNPs_filtered_all_2_ordered_two_less.vcf --recode --recode-INFO-all
+vcftools --keep individuals_keep --vcf star_Danish_all_combined_genotypes_SNPs_filtered_all_2_ordered_two_less.vcf.recode.vcf --out  star_Danish_all_combined_genotypes_SNPs_filtered_all_2_ordered_two_less_182.vcf --recode --recode-INFO-all
+
+############################PART 5. SNPEFF To keep SNPS in exons
+#########Variant calling was done with the genome, therefore filter introns etc..
+############ KEEP EXONS USE SNPEFF copy Fasta and CDS again from gFACS
+setenv Fraxinus_excelsior_Fe1
+setenv GFF3 gFACs/default_gFACs_entap_unique_out.gff3 ####from annotation
+setwnv FASTA genomepilon_genome_purge_haplotugs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta ###genome
+mkdir data/$DBNAME
+
+DBNAME=Fraxinus_excelsior_1 
+cp $GFF3 data/$DBNAME/genes.gff
+cp $FASTA data/$DBNAME/sequences.fa
+
+echo "$DBNAME.genome : $DBNAME" >> snpEff.config
+
+####RUN snpEFF.jar now to build up dataset and then to select exons in the vcf
+java -jar snpEff.jar build -gtf22 -v Fraxinus_excelsior_1 -noCheckProtein
+
+sed 's/TIG/tig/g' star_Danish_all_combined_genotypes_SNPs_filtered_all_2_ordered_two_less_182.vcf.recode.vcf > star_Danish_all_combined_genotypes_SNPs_filtered_all_2.recode_2.vcf
+sed 's/PILON/pilon/g' star_Danish_all_combined_genotypes_SNPs_filtered_all_2.recode_2.vcf > star_Danish_all_combined_genotypes_SNPs_filtered_all_2.recode_3.vcf
+java -Xmx280g -jar snpEff.jar Fraxinus_excelsior_1 star_Danish_all_combined_genotypes_SNPs_filtered_all_2.recode_3.vcf -v  > star_Danish_all_combined_genotypes_SNPs_filtered_all_3_annotation.vcf ###this produces snpEFF_genes and summary
+cp snpEff_genes.txt  star_Danish_all_combined_genotypes_SNPs_filtered_all_genes.txt
+cp snpEff_summary.html  star_Danish_all_combined_genotypes_SNPs_filtered_all_summary.html
+
+java -jar SnpSift.jar filter "(ANN[*].EFFECT has 'missense_variant')|(ANN[*].EFFECT has 'splice_acceptor_variant')|(ANN[*].EFFECT has 'splice_donor_variant')|(ANN[*].EFFECT has 'splice_region_variant')|(ANN[*].EFFECT has 'start_lost')|(ANN[*].EFFECT has 'start_retained_variant')|(ANN[*].EFFECT has 'stop_gained')|(ANN[*].EFFECT has 'stop_lost')|(ANN[*].EFFECT has 'stop_retained_variant')|(ANN[*].EFFECT has 'synonymous_variant') " star_Danish_all_combined_genotypes_SNPs_filtered_all_3_annotation.vcf > star_Danish_all_combined_genotypes_SNPs_filtered_all_3.recode_2_exons.vcf
+
+############################PART 6
+############################PSIKO and HAPMAP (G matrix) for AT
+
+#######PSIKO
+#vcftools --vcf star_Danish_all_combined_genotypes_SNPs_filtered_all_3.recode_2_exons.vcf --out Danish_exons --plink
+#vcftools --vcf star_Danish_all_combined_genotypes_SNPs_filtered_all_3.recode_2_exons.vcf --out Danish_exons --012
+###in R to obtain .geno 
+###first use R to vcf to gen
+#PSIKO -i Danish_exons.geno -K 2
+
+####use Tassel for HAPMAP for AT
+run_pipeline.pl -Xmx40g -fork1 -vcf star_Danish_all_combined_genotypes_SNPs_filtered_all_3.recode_2_exons_ordered.vcf -export Danish_exons_tassel -exportType Hapmap -runfork1
+awk '{print $3,$4,$4,$1,$2,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60,$61,$62,$63,$64,$65,$66,$67,$68,$69,$70,$71,$72,$73,$74,$75,$76,$77,$78,$79,$80,$81,$82,$83,$84,$85,$86,$87,$88,$89,$90,$91,$92,$93,$94,$95,$96,$97,$98,$99,$100,$101,$102,$103,$104,$105,$106,$107,$108,$109,$110,$111,$112,$113,$114,$115,$116,$117,$118,$119,$120,$121,$122,$123,$124,$125,$126,$127,$128,$129,$130,$131,$132,$133,$134,$135,$136,$137,$138,$139,$140,$141,$142,$143,$144,$145,$146,$147,$148,$149,$150,$151,$152,$153,$154,$155,$156,$157,$158,$159,$160,$161,$162,$163,$164,$165,$166,$167,$168,$169,$170,$171,$172,$173,$174,$175,$176,$177,$178,$179,$180,$181,$182,$183,$184,$185,$186,$187,$188,$189,$190,$191,$192,$193}' Danish_exons_tassel.hmp.txt > Danish_exons_tassel_mod.txt
+sed 's/chrom/#chrom/' Danish_exons_tassel_mod.txt > Danish_exons_tassel_mod_2.txt
+sed 's/TIG/tig/g' Danish_exons_tassel_mod_2.txt > Danish_exons_tassel_mod_3.txt
+sed 's/PILON/pilon/g' Danish_exons_tassel_mod_3.txt > Danish_exons_tassel_mod_4.txt
+sed 's/ /\t/g' Danish_exons_tassel_mod_4.txt > Danish_exons_tassel_mod_5.txt
+sed 's/"//g' Danish_exons_tassel_mod_5.txt > Danish_exons_tassel_mod_6.txt
+
+bcftools query -Hf '%CHROM\t%POS\t%REF\t%ALT\t%ID\n' star_Danish_all_combined_genotypes_SNPs_filtered_all_3.recode_2_exons.vcf > snps_chr_pos_Danish_exons
+sed 's/"//g' snps_chr_pos_Danish_exons > snps_chr_pos_Danish_exons_2
+awk '{print $1,$2,$2,$3,$4,$5}' snps_chr_pos_Danish_exons_2 > snps_chr_pos_Danish_exons_3
+
+bedtools intersect -a Danish_exons_tassel_mod_6.txt -b genes_coordinates_final -loj > Danish_exons_tassel_mod_6_genes
+
+
+############################
+##2. DANISH TPM to then run GEM analysis
+############################
+mkdir RPKM_genome
+salmon index -t genome_CDS.fasta -i CDS_genome_index
+
+file=list_Danish.txt
+while read -r line; do
+ echo "Processing sample ${line}"
+ salmon quant -i CDS_genome_index -l A \
+         -r /users/sfo503/scratch/Danish/Danish_trimmomatic/${line}_trimmomatic_out.gz \
+         -p $SLURM_CPUS_PER_TASK --validateMappings -o RPKM_genome/${line}_quant
+ cp RPKM_genome/${line}_quant/quant.sf ./RPKM_genome/${line}_salmon.sf
+done < "$file"
+cat ./RPKM/*_quant
+
+
+
+
+
+
+
