@@ -1,0 +1,52 @@
+###########Call Methylation of a tolerant (Sample 1) vs susceptible tree (Sample 3)
+##########PART 1 - call methylation 
+mkdir ./nanopolish_genome_divided/sample1
+mkdir ./nanopolish_genome_divided/sample3
+cat ./Sample1_fastq/*.fastq > /Sample1_fastq_combined/Sample1_all.fastq;
+awk 'BEGIN { t=0.0;sq=0.0; n=0;} ;NR%4==2 {n++;L=length($0);t+=L;sq+=L*L;}END{m=t/n;printf("total %d avg=%f stddev=%f\n",n,m,sq/n-m*m);}'  *.fastq > parameters_sample1.txt
+
+ln -s pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta
+ln -s pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta 
+samtools index genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta
+bwa index genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta
+bwa mem -t $SLURM_CPUS_PER_TASK -x ont2d genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta 20190121_AH_Sample1.fastq > mapping_sample1.sam
+bwa mem -t $SLURM_CPUS_PER_TASK -x ont2d genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta 20190121_AH_Sample3.fastq > mapping_sample3.sam
+samtools view -S -bo -h mapping_sample1.sam -o mapping_sample1.bam
+samtools view -S -bo -h mapping_sample3.sam -o mapping_sample3.bam
+samtools sort -m 1G mapping_sample1.bam -o mapping_sample1_sorted.bam
+samtools sort -m 1G  mapping_sample3.bam -o mapping_sample3_sorted.bam
+samtools index mapping_sample1_sorted.bam
+samtools index mapping_sample3_sorted.bam
+
+
+
+#############
+nanopolish index -d fast5s/Sample_1_fast5s/Sample_1_fast5s/ -s Sample_1_seq_summary.txt 20190121_AH_Sample1.fastq.gz
+nanopolish index -d fast5s/Sample_3_fast5s/Sample_3_fast5s/ -s Sample_3_seq_summary.txt 20190121_AH_Sample3.fastq.gz
+
+filename=nanopolish_makerange_smaller/genome_segmented_for_nanopolish_0.1mb.txt
+while read -r line; do
+	name="$line"
+	echo "line is -$name"
+	nanopolish call-methylation -t 40 --verbose --progress -q cpg -r 20190121_AH_Sample1.fastq.gz -b mapping_sample1_sorted.bam -g genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta -w "$name" > ./methylation_sample1/methylation_sample1_$name.tsv
+done < <(sed -n 432001,440000p "$filename")
+
+while read -r line; do
+	name="$line"
+	echo "line is -$name"
+	nanopolish call-methylation -t 40 --verbose --progress -q cpg -r 20190121_AH_Sample3.fastq.gz -b mapping_sample3_sorted.bam -g genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta -w "$name" > ./methylation_sample3/methylation_sample3_$name.tsv
+done < <(sed -n 432001,440000p "$filename")
+
+find ./methylation_sample1/ -type f -exec cat {} \; > all_methylation_sample1.tsv
+find ./methylation_sample3/ -type f -exec cat {} \; > all_methylation_sample3.tsv
+
+
+awk '!/read_name/ || !a[/read_name/]++' all_methylation_sample1.tsv > all_methylation_sample1_no_dups.tsv
+sed -i 's/num_cpgs/num_motifs/g'  all_methylation_sample1_no_dups.tsv
+awk -F'\t' ' $10>=1 {print $0}' OFS='\t' all_methylation_sample1_no_dups.tsv > all_methylation_sample1_no_dups_2.tsv
+python calculate_methylation_frequency.py all_methylation_sample1_no_dups_2.tsv > all_methylation_sample1_frequency.tsv
+
+awk '!/read_name/ || !a[/read_name/]++' all_methylation_sample3.tsv > all_methylation_sample3_no_dups.tsv
+sed -i 's/num_cpgs/num_motifs/g'  all_methylation_sample3_no_dups.tsv
+awk -F'\t' ' $10>=1 {print $0}' OFS='\t' all_methylation_sample3_no_dups.tsv > all_methylation_sample3_no_dups_2.tsv
+python calculate_methylation_frequency.py all_methylation_sample3_no_dups_2.tsv > all_methylation_sample3_frequency.tsv
