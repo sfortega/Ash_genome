@@ -1,0 +1,226 @@
+####### Match gene body, upstream and downstream regions with methylation frequency in Sample 1 (tolerant) and Sample 3 (susceptible)
+
+####GEMS obtained from AT analysis with FDR<0.05
+#sed 's/ID=//g' F.excelsior_ONT_annotation.4.gff3 > F.excelsior_ONT_annotation.5
+#sed 's/ /\t/g' F.excelsior_ONT_annotation.5 > F.excelsior_ONT_annotation.6
+#grep "mRNA" F.excelsior_ONT_annotation.6 > F.excelsior_ONT_annotation.7
+#cut -f1 -d";" F.excelsior_ONT_annotation.7 > F.excelsior_ONT_annotation.8
+
+###in R do:
+library(dplyr)
+all=read.table("/users/sfo503/scratch/ash/F.excelsior_ONT_annotation.8", header=F, sep="\t")
+genes=read.table("/users/sfo503/scratch/ash/GEMs", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene","info","info1","info2", "strand","info3" ,"Genes")
+colnames(all)<-c(header)
+colnames(genes)<-c("Genes")
+combined=left_join(genes,all)
+combined=combined[,c(2,3,4,8,1)]
+
+write.table(combined,"/users/sfo503/scratch/ash/GEMs_coordinates", col.names=T, sep="\t", row.names=F)
+###back to bash /users/sfo503/scratch/dulcamara_nigrum/genes/genes_interest_Sd_Sa_coordinates
+
+
+
+####genes
+sed 's/"//g' GEMs_coordinates > GEMs_coordinates2
+sed 's/Contig/#Contig/g' GEMs_coordinates2 > GEMs_coordinates3
+bedtools intersect -a GEMs_coordinates3 -b  R_vs_S/all_methylation_sample1_frequency_new.2.tsv -wo > R_vs_S/Sample1_meth_GEMs
+bedtools intersect -a GEMs_coordinates3 -b  R_vs_S/all_methylation_sample3_frequency.2.tsv -wo > R_vs_S/Sample3_meth_GEMs
+
+###upstream
+awk 'BEGIN{OFS="\t";FS="\t"} {if ($7 == "+") {print $1,$2-1000, $2-1, $4, $5} else {print $1,$3+1,$3+1000, $4, $5}}' GEMs_coordinates3 > GEMs_coordinates3.upstream
+sed 's/ /\t/g' GEMs_coordinates3.upstream > GEMs_coordinates3.upstream2
+awk 'BEGIN{OFS="\t";FS="\t"} {if ($2 < 0) {print $1,0, $3, $4, $5} else {print $1,$2,$3, $4, $5}}' GEMs_coordinates3.upstream2 > GEMs_coordinates3.upstream3
+bedtools intersect -a GEMs_coordinates3.upstream3 -b  R_vs_S/all_methylation_sample1_frequency_new.2.tsv -wo > R_vs_S/Sample1_meth_GEMs.upstream
+bedtools intersect -a GEMs_coordinates3.upstream3 -b  R_vs_S/all_methylation_sample3_frequency.2.tsv -wo > R_vs_S/Sample3_meth_GEMs.upstream
+
+###downstream
+awk 'BEGIN{OFS="\t";FS="\t"} {if ($7 == "+") {print $1,$3+1, $3+1000, $4, $5} else {print $1,$2-1000,$2-1, $4, $5}}' GEMs_coordinates3 > GEMs_coordinates3.downstream
+sed 's/ /\t/g' GEMs_coordinates3.downstream > GEMs_coordinates3.downstream2
+awk 'BEGIN{OFS="\t";FS="\t"} {if ($2 < 0) {print $1,0, $3, $4, $5} else {print $1,$2,$3, $4, $5}}' GEMs_coordinates3.downstream2 > GEMs_coordinates3.downstream3
+bedtools intersect -a GEMs_coordinates3.downstream3 -b  R_vs_S/all_methylation_sample1_frequency_new.2.tsv -wo > R_vs_S/Sample1_meth_GEMs.downstream
+bedtools intersect -a GEMs_coordinates3.downstream3 -b  R_vs_S/all_methylation_sample3_frequency.2.tsv -wo > R_vs_S/Sample3_meth_GEMs.downstream
+
+
+######### R
+########################### PART 1- Sample 1
+genes=read.table("Sample1_meth_GEMs", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene", "strand", "Gene_ID", "contig", "start_methylation", "end_methylation", "num_motifs_in_group", "called_sites", "called_sites_methylated", "methylated_frequency", "group_sequence", "gene_and_methylation_overlap")
+colnames(genes)<-c(header)
+genes$Gene_size=genes$end_gene - genes$start_gene
+
+###222115 15
+genes$start_gene_percentage=c(1)
+genes$end_gene_percentage=c(100)
+genes$start_methylation_start_gene_difference=genes$start_methylation- genes$start_gene
+genes$end_methylation_start_gene_difference=genes$end_methylation- genes$start_gene
+genes$start_methylation_start_gene_difference=with(genes,ifelse(genes$start_methylation_start_gene_difference ==0, 1,genes$start_methylation_start_gene_difference))
+
+genes=genes %>% mutate(start_meth_percentage = start_methylation_start_gene_difference / Gene_size)
+genes=genes %>% mutate(end_meth_percentage = end_methylation_start_gene_difference / Gene_size)
+genes$start_meth_percentage = 100*genes$start_meth_percentage
+genes$end_meth_percentage = 100*genes$end_meth_percentage
+write.table(genes, "Sample1_meth_GEMs_filt_coordinates", col.names=T, sep="\t")
+
+
+
+##########Upstream
+genes_up=read.table("Sample1_meth_GEMs.upstream", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene", "strand", "Gene_ID", "contig", "start_methylation", "end_methylation", "num_motifs_in_group", "called_sites", "called_sites_methylated", "methylated_frequency", "group_sequence", "gene_and_methylation_overlap")
+colnames(genes_up)<-c(header)
+genes_up$Gene_size=genes_up$end_gene - genes_up$start_gene
+
+###222115 15
+genes_up$start_gene_percentage=c(1)
+genes_up$end_gene_percentage=c(100)
+genes_up$start_methylation_start_gene_difference=genes_up$start_methylation- genes_up$start_gene
+genes_up$end_methylation_start_gene_difference=genes_up$end_methylation- genes_up$start_gene
+genes_up$start_methylation_start_gene_difference=with(genes_up,ifelse(genes_up$start_methylation_start_gene_difference ==0, 1,genes_up$start_methylation_start_gene_difference))
+
+genes_up=genes_up %>% mutate(start_meth_percentage = start_methylation_start_gene_difference / Gene_size)
+genes_up=genes_up %>% mutate(end_meth_percentage = end_methylation_start_gene_difference / Gene_size)
+genes_up$start_meth_percentage = 100*genes_up$start_meth_percentage
+genes_up$end_meth_percentage = 100*genes_up$end_meth_percentage
+write.table(genes_up, "Sample1_meth_GEMs.upstream_filt_coordinates", col.names=T, sep="\t")
+
+
+
+##########downstream
+genes_down=read.table("Sample1_meth_GEMs.downstream", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene", "strand", "Gene_ID", "contig", "start_methylation", "end_methylation", "num_motifs_in_group", "called_sites", "called_sites_methylated", "methylated_frequency", "group_sequence", "gene_and_methylation_overlap")
+colnames(genes_down)<-c(header)
+genes_down$Gene_size=genes_down$end_gene - genes_down$start_gene
+genes_down$start_gene_percentage=c(1)
+genes_down$end_gene_percentage=c(100)
+genes_down$start_methylation_start_gene_difference=genes_down$start_methylation- genes_down$start_gene
+genes_down$end_methylation_start_gene_difference=genes_down$end_methylation- genes_down$start_gene
+genes_down$start_methylation_start_gene_difference=with(genes_down,ifelse(genes_down$start_methylation_start_gene_difference ==0, 1,genes_down$start_methylation_start_gene_difference))
+
+genes_down=genes_down %>% mutate(start_meth_percentage = start_methylation_start_gene_difference / Gene_size)
+genes_down=genes_down %>% mutate(end_meth_percentage = end_methylation_start_gene_difference / Gene_size)
+genes_down$start_meth_percentage = 100*genes_down$start_meth_percentage
+genes_down$end_meth_percentage = 100*genes_down$end_meth_percentage
+write.table(genes_down, "Sample1_meth_GEMs.downstream_filt_coordinates", col.names=T, sep="\t")
+
+#######GENES
+
+genes_filt_average=genes %>%
+  group_by(Gene_ID) %>%
+  summarise(mean=mean(methylated_frequency,na.rm=TRUE))
+write.table(genes_filt_average, "Sample1_meth_GEMs_average", col.names=T, sep="\t")
+
+genes_up_filt_average=genes_up %>%
+  group_by(Gene_ID) %>%
+  summarise(mean=mean(methylated_frequency,na.rm=TRUE))
+write.table(genes_up_filt_average, "Sample1_meth_GEMs_average.upstream", col.names=T, sep="\t")
+
+
+genes_down_filt_average=genes_down %>%
+  group_by(Gene_ID) %>%
+  summarise(mean=mean(methylated_frequency,na.rm=TRUE))
+write.table(genes_down_filt_average, "Sample1_meth_GEMs_average.downstream", col.names=T, sep="\t")
+
+
+
+########################### PART 2- Sample 3
+genes=read.table("Sample3_meth_GEMs", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene", "strand", "Gene_ID", "contig", "start_methylation", "end_methylation", "num_motifs_in_group", "called_sites", "called_sites_methylated", "methylated_frequency", "group_sequence", "gene_and_methylation_overlap")
+colnames(genes)<-c(header)
+genes$Gene_size=genes$end_gene - genes$start_gene
+
+###222115 15
+genes$start_gene_percentage=c(1)
+genes$end_gene_percentage=c(100)
+genes$start_methylation_start_gene_difference=genes$start_methylation- genes$start_gene
+genes$end_methylation_start_gene_difference=genes$end_methylation- genes$start_gene
+genes$start_methylation_start_gene_difference=with(genes,ifelse(genes$start_methylation_start_gene_difference ==0, 1,genes$start_methylation_start_gene_difference))
+
+genes=genes %>% mutate(start_meth_percentage = start_methylation_start_gene_difference / Gene_size)
+genes=genes %>% mutate(end_meth_percentage = end_methylation_start_gene_difference / Gene_size)
+genes$start_meth_percentage = 100*genes$start_meth_percentage
+genes$end_meth_percentage = 100*genes$end_meth_percentage
+write.table(genes, "Sample3_meth_GEMs_filt_coordinates", col.names=T, sep="\t")
+
+
+
+##########Upstream
+genes_up=read.table("Sample3_meth_GEMs.upstream", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene", "strand", "Gene_ID", "contig", "start_methylation", "end_methylation", "num_motifs_in_group", "called_sites", "called_sites_methylated", "methylated_frequency", "group_sequence", "gene_and_methylation_overlap")
+colnames(genes_up)<-c(header)
+genes_up$Gene_size=genes_up$end_gene - genes_up$start_gene
+
+###222115 15
+genes_up$start_gene_percentage=c(1)
+genes_up$end_gene_percentage=c(100)
+genes_up$start_methylation_start_gene_difference=genes_up$start_methylation- genes_up$start_gene
+genes_up$end_methylation_start_gene_difference=genes_up$end_methylation- genes_up$start_gene
+genes_up$start_methylation_start_gene_difference=with(genes_up,ifelse(genes_up$start_methylation_start_gene_difference ==0, 1,genes_up$start_methylation_start_gene_difference))
+
+genes_up=genes_up %>% mutate(start_meth_percentage = start_methylation_start_gene_difference / Gene_size)
+genes_up=genes_up %>% mutate(end_meth_percentage = end_methylation_start_gene_difference / Gene_size)
+genes_up$start_meth_percentage = 100*genes_up$start_meth_percentage
+genes_up$end_meth_percentage = 100*genes_up$end_meth_percentage
+write.table(genes_up, "Sample3_meth_GEMs.upstream_filt_coordinates", col.names=T, sep="\t")
+
+
+
+##########downstream
+genes_down=read.table("Sample3_meth_GEMs.downstream", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene", "strand", "Gene_ID", "contig", "start_methylation", "end_methylation", "num_motifs_in_group", "called_sites", "called_sites_methylated", "methylated_frequency", "group_sequence", "gene_and_methylation_overlap")
+colnames(genes_down)<-c(header)
+genes_down$Gene_size=genes_down$end_gene - genes_down$start_gene
+genes_down$start_gene_percentage=c(1)
+genes_down$end_gene_percentage=c(100)
+genes_down$start_methylation_start_gene_difference=genes_down$start_methylation- genes_down$start_gene
+genes_down$end_methylation_start_gene_difference=genes_down$end_methylation- genes_down$start_gene
+genes_down$start_methylation_start_gene_difference=with(genes_down,ifelse(genes_down$start_methylation_start_gene_difference ==0, 1,genes_down$start_methylation_start_gene_difference))
+
+genes_down=genes_down %>% mutate(start_meth_percentage = start_methylation_start_gene_difference / Gene_size)
+genes_down=genes_down %>% mutate(end_meth_percentage = end_methylation_start_gene_difference / Gene_size)
+genes_down$start_meth_percentage = 100*genes_down$start_meth_percentage
+genes_down$end_meth_percentage = 100*genes_down$end_meth_percentage
+write.table(genes_down, "Sample3_meth_GEMs.downstream_filt_coordinates", col.names=T, sep="\t")
+
+#######GENES
+genes_filt_average=genes %>%
+  group_by(Gene_ID) %>%
+  summarise(mean=mean(methylated_frequency,na.rm=TRUE))
+write.table(genes_filt_average, "Sample3_meth_GEMs_average", col.names=T, sep="\t")
+
+genes_up_filt_average=genes_up %>%
+  group_by(Gene_ID) %>%
+  summarise(mean=mean(methylated_frequency,na.rm=TRUE))
+write.table(genes_up_filt_average, "Sample3_meth_GEMs_average.upstream", col.names=T, sep="\t")
+
+
+genes_down_filt_average=genes_down %>%
+  group_by(Gene_ID) %>%
+  summarise(mean=mean(methylated_frequency,na.rm=TRUE))
+write.table(genes_down_filt_average, "Sample3_meth_GEMs_average.downstream", col.names=T, sep="\t")
+
+
+
+
+########################### PART 3- Combine all
+genes_1=read.table("Sample1_meth_GEMs_average", header=T, sep="\t")
+colnames(genes_1)=c("Genes","Gene_body_Sample1")
+genes_3=read.table("Sample3_meth_GEMs_average", header=T, sep="\t")
+colnames(genes_3)=c("Genes","Gene_body_Sample3")
+
+genes_1_up=read.table("Sample1_meth_GEMs_average.upstream", header=T, sep="\t")
+colnames(genes_1_up)=c("Genes","Upstream_Sample1")
+genes_3_up=read.table("Sample3_meth_GEMs_average.upstream", header=T, sep="\t")
+colnames(genes_3_up)=c("Genes","Upstream_Sample3")
+
+genes_1_down=read.table("Sample1_meth_GEMs_average.downstream", header=T, sep="\t")
+colnames(genes_1_down)=c("Genes","Downstream_Sample1")
+genes_3_down=read.table("Sample3_meth_GEMs_average.downstream", header=T, sep="\t")
+colnames(genes_3_down)=c("Genes","Downstream_Sample3")
+
+genes=left_join(genes_1,genes_3)
+genes2=left_join(genes, genes_1_up)
+genes3=left_join(genes2, genes_3_up)
+genes4=left_join(genes3, genes_1_down)
+genes5=left_join(genes4, genes_3_down)
+write.table(genes5, "Sample1_Sample3_meth_GEMs_average_all", col.names=T, sep="\t")
+
