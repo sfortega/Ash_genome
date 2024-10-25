@@ -1,0 +1,346 @@
+####################
+####################PART 1 - Gene body
+#################### Sample1
+library(dplyr)
+genes=read.table("Sample1_meth_GEMs", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene", "strand", "Gene_ID", "contig", "start_methylation", "end_methylation", "num_motifs_in_group", "called_sites", "called_sites_methylated", "methylated_frequency", "group_sequence", "gene_and_methylation_overlap")
+colnames(genes)<-c(header)
+genes=genes[grep ("Fe_g22999",genes$Gene_ID),]
+genes$Gene_size=genes$end_gene - genes$start_gene
+###222115 15
+genes$start_gene_percentage=c(1)
+genes$end_gene_percentage=c(100)
+genes$start_methylation_start_gene_difference=genes$start_methylation- genes$start_gene
+genes$end_methylation_start_gene_difference=genes$end_methylation- genes$start_gene
+
+genes=genes %>% mutate(start_meth_percentage = start_methylation_start_gene_difference / Gene_size)
+genes=genes %>% mutate(end_meth_percentage = end_methylation_start_gene_difference / Gene_size)
+genes$start_meth_percentage = 100*genes$start_meth_percentage
+genes$end_meth_percentage = 100*genes$end_meth_percentage
+write.table(genes, "Sample1_meth_GEMs_g22999_filt_coordinates", col.names=T, sep="\t")
+
+
+##############intervals
+cuts <- cut(genes$end_meth_percentage, breaks=seq(1, max(genes$start_meth_percentage)+5, 20))
+cut_list=as.data.frame(by(genes$methylated_frequency, cuts, mean))
+cut_list2=as.data.frame(by(genes$methylated_frequency, cuts, max)) ##ok
+cut_list3=as.data.frame(by(genes$methylated_frequency, cuts, min)) ##ok
+cut_list$coordinates<-rownames(cut_list)
+cut_list$coordinates=gsub("(","", cut_list$coordinates,fixed=TRUE)
+cut_list$coordinates=gsub("]","", cut_list$coordinates,fixed=TRUE)
+
+library(stringr)
+cut_list[c('start_coordinates', 'end_coordinates')] <- str_split_fixed(cut_list$coordinates, ',', 2)
+cut_list$start_coordinates=as.numeric(cut_list$start_coordinates)
+cut_list$end_coordinates=as.numeric(cut_list$end_coordinates)
+cut_list$x=as.numeric(cut_list$x)
+cut_list$middle_coordinates=cut_list$end_coordinates-3
+colnames(cut_list)=c("Sample1_freq", "coordinates", "start_coordinates", "end_coordinates", "middle_coordinates")
+
+#################### Sample3
+library(dplyr)
+genes_n=read.table("Sample3_meth_GEMs", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene", "strand", "Gene_ID", "contig", "start_methylation", "end_methylation", "num_motifs_in_group", "called_sites", "called_sites_methylated", "methylated_frequency", "group_sequence", "gene_and_methylation_overlap")
+colnames(genes_n)<-c(header)
+genes_n=genes_n[grep("Fe_g22999",genes_n$Gene_ID),]
+genes_n$Gene_size=genes_n$end_gene - genes_n$start_gene
+genes_n$start_gene_percentage=c(1)
+genes_n$end_gene_percentage=c(100)
+genes_n$start_methylation_start_gene_difference=genes_n$start_methylation- genes_n$start_gene
+genes_n$end_methylation_start_gene_difference=genes_n$end_methylation- genes_n$start_gene
+
+genes_n=genes_n %>% mutate(start_meth_percentage = start_methylation_start_gene_difference / Gene_size)
+genes_n=genes_n %>% mutate(end_meth_percentage = end_methylation_start_gene_difference / Gene_size)
+genes_n$start_meth_percentage = 100*genes_n$start_meth_percentage
+genes_n$end_meth_percentage = 100*genes_n$end_meth_percentage
+write.table(genes_n, "Sample3_meth_GEMs_g22999_filt_coordinates", col.names=T, sep="\t")
+
+##############intervals
+#####average by 5%
+cuts_n <- cut(genes_n$end_meth_percentage, breaks=seq(1, max(genes_n$start_meth_percentage)+5, 20))
+cut_list_n=as.data.frame(by(genes_n$methylated_frequency, cuts_n, mean))
+cut_list2_n=as.data.frame(by(genes_n$methylated_frequency, cuts_n, max)) ##ok
+cut_list3_n=as.data.frame(by(genes_n$methylated_frequency, cuts_n, min)) ##ok
+cut_list_n$coordinates<-rownames(cut_list_n)
+cut_list_n$coordinates=gsub("(","", cut_list_n$coordinates,fixed=TRUE)
+cut_list_n$coordinates=gsub("]","", cut_list_n$coordinates,fixed=TRUE)
+
+library(stringr)
+cut_list_n[c('start_coordinates', 'end_coordinates')] <- str_split_fixed(cut_list_n$coordinates, ',', 2)
+cut_list_n$start_coordinates=as.numeric(cut_list_n$start_coordinates)
+cut_list_n$end_coordinates=as.numeric(cut_list_n$end_coordinates)
+cut_list_n$x=as.numeric(cut_list_n$x)
+cut_list_n$middle_coordinates=cut_list_n$end_coordinates-3
+colnames(cut_list_n)=c("Sample3_freq", "coordinates", "start_coordinates", "end_coordinates", "middle_coordinates")
+
+
+###########group
+
+cut_list_final=left_join(cut_list, cut_list_n)
+write.table(cut_list_final, "Sample1_Sample3_meth_GEMs_g22999_intervals", col.names=T, sep="\t")
+
+
+
+####################
+####################PART 2 - Upstream
+#################### Sample1
+library(dplyr)
+genes=read.table("Sample1_meth_GEMs.upstream", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene", "strand", "Gene_ID", "contig", "start_methylation", "end_methylation", "num_motifs_in_group", "called_sites", "called_sites_methylated", "methylated_frequency", "group_sequence", "gene_and_methylation_overlap")
+colnames(genes)<-c(header)
+genes=genes[grep ("Fe_g22999",genes$Gene_ID),]
+genes$Gene_size=genes$end_gene - genes$start_gene
+###222115 15
+genes$start_gene_percentage=c(1)
+genes$end_gene_percentage=c(100)
+genes$start_methylation_start_gene_difference=genes$start_methylation- genes$start_gene
+genes$end_methylation_start_gene_difference=genes$end_methylation- genes$start_gene
+
+genes=genes %>% mutate(start_meth_percentage = start_methylation_start_gene_difference / Gene_size)
+genes=genes %>% mutate(end_meth_percentage = end_methylation_start_gene_difference / Gene_size)
+genes$start_meth_percentage = 100*genes$start_meth_percentage
+genes$end_meth_percentage = 100*genes$end_meth_percentage
+write.table(genes, "Sample1_meth_GEMs_g22999.upstream_filt_coordinates", col.names=T, sep="\t")
+
+cuts <- cut(genes$end_meth_percentage, breaks=seq(1, max(genes$start_meth_percentage)+5, 20))
+cut_list=as.data.frame(by(genes$methylated_frequency, cuts, mean))
+cut_list2=as.data.frame(by(genes$methylated_frequency, cuts, max)) ##ok
+cut_list3=as.data.frame(by(genes$methylated_frequency, cuts, min)) ##ok
+cut_list$coordinates<-rownames(cut_list)
+cut_list$coordinates=gsub("(","", cut_list$coordinates,fixed=TRUE)
+cut_list$coordinates=gsub("]","", cut_list$coordinates,fixed=TRUE)
+
+library(stringr)
+cut_list[c('start_coordinates', 'end_coordinates')] <- str_split_fixed(cut_list$coordinates, ',', 2)
+cut_list$start_coordinates=as.numeric(cut_list$start_coordinates)
+cut_list$end_coordinates=as.numeric(cut_list$end_coordinates)
+cut_list$x=as.numeric(cut_list$x)
+cut_list$middle_coordinates=cut_list$end_coordinates-3
+colnames(cut_list)=c("Sample1_freq", "coordinates", "start_coordinates", "end_coordinates", "middle_coordinates")
+
+#################### Sample3
+library(dplyr)
+genes_n=read.table("Sample3_meth_GEMs.upstream", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene", "strand", "Gene_ID", "contig", "start_methylation", "end_methylation", "num_motifs_in_group", "called_sites", "called_sites_methylated", "methylated_frequency", "group_sequence", "gene_and_methylation_overlap")
+colnames(genes_n)<-c(header)
+genes=genes_n[grep ("Fe_g22999",genes_n$Gene_ID),]
+genes_n$Gene_size=genes_n$end_gene - genes_n$start_gene
+###222115 15
+genes_n$start_gene_percentage=c(1)
+genes_n$end_gene_percentage=c(100)
+genes_n$start_methylation_start_gene_difference=genes_n$start_methylation- genes_n$start_gene
+genes_n$end_methylation_start_gene_difference=genes_n$end_methylation- genes_n$start_gene
+
+genes_n=genes_n %>% mutate(start_meth_percentage = start_methylation_start_gene_difference / Gene_size)
+genes_n=genes_n %>% mutate(end_meth_percentage = end_methylation_start_gene_difference / Gene_size)
+genes_n$start_meth_percentage = 100*genes_n$start_meth_percentage
+genes_n$end_meth_percentage = 100*genes_n$end_meth_percentage
+write.table(genes_n, "Sample3_meth_GEMs_g22999.upstream_filt_coordinates", col.names=T, sep="\t")
+
+##############intervals
+#####average by 5%
+cuts_n <- cut(genes_n$end_meth_percentage, breaks=seq(1, max(genes_n$start_meth_percentage)+5, 20))
+cut_list_n=as.data.frame(by(genes_n$methylated_frequency, cuts_n, mean))
+cut_list2_n=as.data.frame(by(genes_n$methylated_frequency, cuts_n, max)) ##ok
+cut_list3_n=as.data.frame(by(genes_n$methylated_frequency, cuts_n, min)) ##ok
+cut_list_n$coordinates<-rownames(cut_list_n)
+cut_list_n$coordinates=gsub("(","", cut_list_n$coordinates,fixed=TRUE)
+cut_list_n$coordinates=gsub("]","", cut_list_n$coordinates,fixed=TRUE)
+
+library(stringr)
+cut_list_n[c('start_coordinates', 'end_coordinates')] <- str_split_fixed(cut_list_n$coordinates, ',', 2)
+cut_list_n$start_coordinates=as.numeric(cut_list_n$start_coordinates)
+cut_list_n$end_coordinates=as.numeric(cut_list_n$end_coordinates)
+cut_list_n$x=as.numeric(cut_list_n$x)
+cut_list_n$middle_coordinates=cut_list_n$end_coordinates-3
+colnames(cut_list_n)=c("Sample3_freq", "coordinates", "start_coordinates", "end_coordinates", "middle_coordinates")
+
+###########group 
+
+cut_list_final=left_join(cut_list, cut_list_n)
+write.table(cut_list_final, "Sample1_Sample3_meth_GEMs_g22999.upstream_intervals", col.names=T, sep="\t")
+
+
+####################
+####################PART 3 -Downstream
+#################### Sample1
+library(dplyr)
+genes=read.table("Sample1_meth_GEMs.downstream", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene", "strand", "Gene_ID", "contig", "start_methylation", "end_methylation", "num_motifs_in_group", "called_sites", "called_sites_methylated", "methylated_frequency", "group_sequence", "gene_and_methylation_overlap")
+colnames(genes)<-c(header)
+genes=genes[grep ("Fe_g22999",genes$Gene_ID),]
+genes$Gene_size=genes$end_gene - genes$start_gene
+###222115 15
+genes$start_gene_percentage=c(1)
+genes$end_gene_percentage=c(100)
+genes$start_methylation_start_gene_difference=genes$start_methylation- genes$start_gene
+genes$end_methylation_start_gene_difference=genes$end_methylation- genes$start_gene
+
+genes=genes %>% mutate(start_meth_percentage = start_methylation_start_gene_difference / Gene_size)
+genes=genes %>% mutate(end_meth_percentage = end_methylation_start_gene_difference / Gene_size)
+genes$start_meth_percentage = 100*genes$start_meth_percentage
+genes$end_meth_percentage = 100*genes$end_meth_percentage
+write.table(genes, "Sample1_meth_GEMs_g22999.downstream_filt_coordinates", col.names=T, sep="\t")
+
+
+##############intervals
+cuts <- cut(genes$end_meth_percentage, breaks=seq(1, max(genes$start_meth_percentage)+5, 20))
+cut_list=as.data.frame(by(genes$methylated_frequency, cuts, mean))
+cut_list2=as.data.frame(by(genes$methylated_frequency, cuts, max)) ##ok
+cut_list3=as.data.frame(by(genes$methylated_frequency, cuts, min)) ##ok
+cut_list$coordinates<-rownames(cut_list)
+cut_list$coordinates=gsub("(","", cut_list$coordinates,fixed=TRUE)
+cut_list$coordinates=gsub("]","", cut_list$coordinates,fixed=TRUE)
+
+
+library(stringr)
+cut_list[c('start_coordinates', 'end_coordinates')] <- str_split_fixed(cut_list$coordinates, ',', 2)
+cut_list$start_coordinates=as.numeric(cut_list$start_coordinates)
+cut_list$end_coordinates=as.numeric(cut_list$end_coordinates)
+cut_list$x=as.numeric(cut_list$x)
+cut_list$middle_coordinates=cut_list$end_coordinates-3
+colnames(cut_list)=c("Sample1_freq", "coordinates", "start_coordinates", "end_coordinates", "middle_coordinates")
+
+#################### Sample3
+library(dplyr)
+genes_n=read.table("Sample3_meth_GEMs.downstream", header=F, sep="\t")
+header= c("Contig", "start_gene", "end_gene", "strand", "Gene_ID", "contig", "start_methylation", "end_methylation", "num_motifs_in_group", "called_sites", "called_sites_methylated", "methylated_frequency", "group_sequence", "gene_and_methylation_overlap")
+colnames(genes_n)<-c(header)
+genes_n=genes_n[grep ("Fe_g22999",genes_n$Gene_ID),]
+
+genes_n$Gene_size=genes_n$end_gene - genes_n$start_gene
+###222115 15
+genes_n$start_gene_percentage=c(1)
+genes_n$end_gene_percentage=c(100)
+genes_n$start_methylation_start_gene_difference=genes_n$start_methylation- genes_n$start_gene
+genes_n$end_methylation_start_gene_difference=genes_n$end_methylation- genes_n$start_gene
+
+genes_n=genes_n %>% mutate(start_meth_percentage = start_methylation_start_gene_difference / Gene_size)
+genes_n=genes_n %>% mutate(end_meth_percentage = end_methylation_start_gene_difference / Gene_size)
+genes_n$start_meth_percentage = 100*genes_n$start_meth_percentage
+genes_n$end_meth_percentage = 100*genes_n$end_meth_percentage
+write.table(genes_n, "Sample3_meth_GEMs_g22999.downstream_filt_coordinates", col.names=T, sep="\t")
+
+##############intervals
+#####average by 5%
+cuts_n <- cut(genes_n$end_meth_percentage, breaks=seq(1, max(genes_n$start_meth_percentage)+5, 20))
+cut_list_n=as.data.frame(by(genes_n$methylated_frequency, cuts_n, mean))
+cut_list2_n=as.data.frame(by(genes_n$methylated_frequency, cuts_n, max)) ##ok
+cut_list3_n=as.data.frame(by(genes_n$methylated_frequency, cuts_n, min)) ##ok
+cut_list_n$coordinates<-rownames(cut_list_n)
+cut_list_n$coordinates=gsub("(","", cut_list_n$coordinates,fixed=TRUE)
+cut_list_n$coordinates=gsub("]","", cut_list_n$coordinates,fixed=TRUE)
+
+library(stringr)
+cut_list_n[c('start_coordinates', 'end_coordinates')] <- str_split_fixed(cut_list_n$coordinates, ',', 2)
+cut_list_n$start_coordinates=as.numeric(cut_list_n$start_coordinates)
+cut_list_n$end_coordinates=as.numeric(cut_list_n$end_coordinates)
+cut_list_n$x=as.numeric(cut_list_n$x)
+cut_list_n$middle_coordinates=cut_list_n$end_coordinates-3
+colnames(cut_list_n)=c("Sample3_freq", "coordinates", "start_coordinates", "end_coordinates", "middle_coordinates")
+
+
+###########group 
+
+cut_list_final=left_join(cut_list, cut_list_n)
+write.table(cut_list_final, "Sample1_Sample3_meth_GEMs_g22999.downstream_intervals", col.names=T, sep="\t")
+
+
+####################
+####################PART 4 - combine all and plot
+library(ggplot2)
+library(dplyr)
+library(reshape2)
+library(data.table)
+library(stringr)
+
+
+genes=read.table("Sample1_Sample3_meth_GEMs_g22999_intervals", header=T, sep="\t")
+upstream=read.table("Sample1_Sample3_meth_GEMs_g22999.upstream_intervals", header=T, sep="\t")
+downstream=read.table("Sample1_Sample3_meth_GEMs_g22999.downstream_intervals", header=T, sep="\t")
+upstream$start_coordinates_all=upstream$start_coordinates
+upstream$end_coordinates_all=upstream$end_coordinates
+
+genes$start_coordinates_all=genes$start_coordinates+100
+genes$end_coordinates_all=genes$end_coordinates+100
+
+downstream$start_coordinates_all=downstream$start_coordinates+200
+downstream$end_coordinates_all=downstream$end_coordinates+200
+
+combined=rbind(upstream,genes,downstream)
+combined$new_coordinates=paste(combined$start_coordinates_all, combined$end_coordinates_all, sep=",")
+
+combined2=as.data.frame(melt(setDT(combined), id.vars = "new_coordinates"))
+combined2[c('start_coordinates', 'end_coordinates')] <- str_split_fixed(combined2$new_coordinates, ',', 2)
+combined2$start_coordinates=as.numeric(combined2$start_coordinates)
+combined2$end_coordinates=as.numeric(combined2$end_coordinates)
+combined2$variable=sub("_freq","",combined2$variable)
+combined3 <- combined2[grep("Sample1|Sample3", combined2$variable),]
+
+combined3$middle_coordinates=with(combined3,ifelse(combined3$start_coordinates <= 6, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates < 6, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 11, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 16, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 21, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 26, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 31, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 36, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 41, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 46, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 51, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 56, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 61, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 66, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 71, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 76, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 81, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 86, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 91, combined3$end_coordinates-3,
+ifelse(combined3$start_coordinates >= 96, combined3$end_coordinates-3,
+	ifelse(combined3$start_coordinates <= 100 & combined3$start_coordinates > 200, combined3$end_coordinates-103,
+		ifelse(combined3$start_coordinates <= 200 & combined3$start_coordinates>300, combined3$end_coordinates-203,"")))))))))))))))))))))))
+
+
+
+
+###add a column with species and the frequency should be in one
+combined3$variable=sub("Sample1", "Tolerant", combined3$variable)
+combined3$variable=sub("Sample3", "Susceptible", combined3$variable)
+###add a column with species and the frequency should be in one
+color_table <-  tibble(
+  Treatment = c("Susceptible","Tolerant"),
+  Color = c("black", "#009E73"))
+
+
+combined3$middle_coordinates=as.numeric(combined3$middle_coordinates)
+combined3$value=as.numeric(combined3$value)
+write.table(combined3, "Sample1_Sample3_meth_GEMs_g22999_all_intervals", col.names=T, sep="\t")
+
+tiff("Sample1_Sample3_both_GEMs_g22999_all.tiff", res=300, he=60, wi=90, units="mm")
+
+par(mar=c(1,1,1,15))
+p=ggplot(combined3, aes(x = middle_coordinates, y = value, colour=variable)) +
+   geom_point(size = 0.1) +
+  theme_bw() +geom_line(aes(x = middle_coordinates))+ylim(0,1)+
+  xlim(0,300)+xlab("")+ ylab("Methylation frequency")+
+theme(plot.margin = margin(t = 1,  # Top margin
+                             r = 25,  # Right margin
+                             b = 1,  # Bottom margin
+                             l = 1)) # Left margin
+
+p=p+scale_x_continuous(breaks = c(0,150,300), 
+labels=c("-1Kb","Gene body",  "+1Kb"))+ theme(legend.text = element_text(face = "italic"))
+
+
+p=p+scale_colour_manual(values = color_table$Color)
+p=p+annotate(geom = "rect", xmin=0, xmax=100, ymin=0, ymax=1,
+           fill = "gray80", colour = NA, alpha = 0.5)
+
+p=p+annotate(geom = "rect", xmin=200, xmax=300, ymin=0, ymax=1,
+           fill = "gray80", colour = NA, alpha = 0.5)
+
+
+print(p)
+dev.off()
+
+
