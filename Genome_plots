@@ -1,0 +1,316 @@
+####1.F. excelsior genomic information plot
+library(circlize)
+library(tidyverse)
+library(data.table)
+
+
+
+########Create all files for contigs, genes, GC, methylation, coverage, LTR,TIR and MADS box coordinates
+library(circlize)
+library(tidyverse)
+library(data.table)
+pseudo=read.table("F.exc_F.penn_chr_sizes",header=F,sep="\t")
+pseudo=pseudo[c(1:23),]
+ntJoin_to_ps=read.table("plot_circular/ntjoin_to_Fe_Chr",header=T)
+pseudo_nt=left_join(pseudo,ntJoin_to_ps,by=c("V1"="Pseudochromosome"))
+genes=fread("plot_circular/genes",header=T,sep="\t")
+contigs=fread("plot_circular/contig_to_ntJoin.txt",header=T,sep="\t")
+
+##4353
+contigs_pseudo=left_join(contigs,ntJoin_to_ps,by=c("ntJoin"="Scaffold"))
+contigs_pseudo_sub=contigs_pseudo[,c(11,2,3,9)] ###9 is strand
+genes=subset(genes,genes$Type=="mRNA") 
+genes_sub=genes[,c(1,4,5,7,11)]
+###43392
+
+genes_contigs=left_join(genes_sub,contigs,by="contig")
+genes_contigs$genes_strand_pseudo=with(genes_contigs,ifelse(genes_contigs$strand_contig_in_pseudochromosome=="+" & genes_contigs$strand=="+", "+",	
+ifelse(genes_contigs$strand_contig_in_pseudochromosome=="+" & genes_contigs$strand=="-", "-",
+	ifelse(genes_contigs$strand_contig_in_pseudochromosome=="-" & genes_contigs$strand=="+", "-",	
+	ifelse(genes_contigs$strand_contig_in_pseudochromosome=="-" & genes_contigs$strand=="-", "+","")))))
+genes_contigs$gene_start_pseudo=genes_contigs$start_tig_pseudochromosome+genes_contigs$start_gene
+genes_contigs$gene_end_pseudogenes_contigs$start_tig_pseudochromosome+genes_contigs$end_gene  
+genes_contigs_coordinates=left_join(genes_contigs, contigs_pseudo,by=c("contig"="contig"))
+#> dim(genes_contigs_coordinates)
+#[1] 43392    27
+
+genes_contigs_to_plot_sub=genes_contigs_coordinates[,c(27,16,17,15)]
+# pseudo, gene start in pseudo, gene end in pseudo, gene strand in pseudo
+write.table(genes_contigs_to_plot_sub,"plot_circular/genes_contigs_to_plot_sub.txt",col.names=T,sep="\t",row.names=F)
+
+
+###########GC content
+GC=fread("plot_circular/GC_content_for_each_gene_genome.txt",header=T,sep="\t")
+GC=GC[,c(4,12)]
+####356066 2
+genes_contigs_GC=left_join(genes_contigs,GC,by=c("Gene"="4_usercol"))
+genes_contigs_GC_pseudo=left_join(genes_contigs_GC,ntJoin_to_ps,by=c("ntJoin"="Scaffold"))
+####356066 19
+
+genes_contigs_GC_pseudo_contig_mean=genes_contigs_GC_pseudo %>%   group_by(Gene) %>%summarise_at(vars("12_pct_gc"), list(name = mean))
+#43392 2
+GC_to_plot=left_join(genes_contigs_GC_pseudo,genes_contigs_GC_pseudo_contig_mean,by="Gene")
+#43392 20
+GC_to_plot_subset=GC_to_plot[,c(19,16,17,20)] 
+###Pseudochromosome, start contig in pseudochromosome, end contig in pseudochromosome, %GC in each gene
+write.table(GC_to_plot_subset,"plot_circular/GC_in_each_gene_4columns.txt",col.names=T,sep="\t",row.names=F)
+
+
+
+############methylation
+methylation=fread("plot_circular/all_methylation_data_genome_Ash_frequency_complete_new.tsv",header=T,sep="\t")
+dim(methylation)
+#[1] 14361637        8
+
+methylation_contig=left_join(methylation,contigs,by=c("chromosome"="contig"))
+methylation_contig$methylation_start_pseudo=methylation_contig$start+methylation_contig$start_tig_pseudochromosome
+methylation_contig$methylation_end_pseudo=methylation_contig$end+methylation_contig$end_tig_pseudochromosome
+
+methylation_contig_pseudo=left_join(methylation_contig,ntJoin_to_ps,by=c("ntJoin"="Scaffold"))
+methylation_contig_pseudo_mean=methylation_contig_pseudo %>%   group_by(Pseudochromosome) %>%summarise_at(vars("methylated_frequency"), list(name = mean))
+write.table(methylation_contig_pseudo_mean,"plot_circular/methylation_contig_pseudo_means.txt",col.names=T,sep="\t",row.names=F)
+write.table(methylation_contig_pseudo,"plot_circular/methylation_contig_pseudo.txt",col.names=T,sep="\t",row.names=F)
+
+methylation_contig_pseudo_to_plot=methylation_contig_pseudo %>%   group_by(chromosome) %>%summarise_at(vars("methylated_frequency"), list(name = mean))
+methylation_contig_pseudo_to_plot_coordinates=as.data.frame(left_join(methylation_contig_pseudo_to_plot,contigs_pseudo,by=c("chromosome"="contig")))
+
+methylation_contig_pseudo_to_plot_subset=as.data.frame(methylation_contig_pseudo_to_plot_coordinates[,c(12,4,5,2)])
+###Pseudochromosome, start contig in pseudochromosome, end contig in pseudochromosome, frequency methylation average in each contig
+write.table(methylation_contig_pseudo_to_plot_subset,"plot_circular/methylation_contig_pseudo_to_plot_subset.txt",col.names=T,sep="\t",row.names=F)
+
+
+
+##############Coverage
+
+#####coverage reads
+library(tidyverse)
+###done first and not repeat the two lines below
+coverage=fread("plot_circular/coverage_genome_base.txt",header=F,sep="\t")
+coverage2=coverage%>%group_by(V1)%>%summarise_at(vars(V3), list(name = mean))
+write.table(coverage2,"plot_circular/coverage_genome_contig.txt",col.names=T,sep="\t") #####average coverage in each contig
+colnames(coverage2)=c("contig","coverage")
+coverage_pseudo=left_join(coverage2,contigs_pseudo,by=c("contig"="contig"))
+coverage_pseudo_to_plot_subset=as.data.frame(coverage_pseudo[,c(12,4,5,2)]) 
+###Pseudochromosome, start contig in pseudochromosome, end contig in pseudochromosome, coverage average in each contig
+write.table(coverage_pseudo_to_plot_subset,"plot_circular/coverage_pseudo_to_plot_subset.txt",col.names=T,sep="\t",row.names=F)
+
+
+
+############TE
+TE=fread("plot_circular/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.mod.EDTA.TEanno.gff3",header=T,sep="\t")
+TE_LTR=TE[grep("LTR", TE$Description),]
+
+dim(TE_LTR)
+#[1] 347220 9
+TE_TIR=TE[grep("TIR", TE$Description),]
+ dim(TE_TIR)
+#[1] 468858      9
+
+TE_LTR=TE_LTR[,c(1,4,5,7)]
+TE_LTR$contig=sub("_p","_pilon",TE_LTR$contig)
+TE_TIR=TE_TIR[,c(1,4,5,7)]
+TE_TIR$contig=sub("_p","_pilon",TE_TIR$contig)
+TE_LTR_pseudo=left_join(TE_LTR,contigs_pseudo,by=c("contig"="contig"))
+TE_TIR_pseudo=left_join(TE_TIR,contigs_pseudo,by=c("contig"="contig"))
+
+TE_LTR_pseudo$TE_start_pseudo=TE_LTR_pseudo$start+TE_LTR_pseudo$start_tig_pseudochromosome
+TE_LTR_pseudo$TE_end_pseudo=TE_LTR_pseudo$end+TE_LTR_pseudo$start_tig_pseudochromosome
+TE_LTR_pseudo$TE_strand_pseudo=with(TE_LTR_pseudo,ifelse(TE_LTR_pseudo$strand_contig_in_pseudochromosome=="+" & TE_LTR_pseudo$strand=="+", "+",	
+ifelse(TE_LTR_pseudo$strand_contig_in_pseudochromosome=="+" & TE_LTR_pseudo$strand=="-", "-",
+	ifelse(TE_LTR_pseudo$strand_contig_in_pseudochromosome=="-" & TE_LTR_pseudo$strand=="+", "-",	
+	ifelse(TE_LTR_pseudo$strand_contig_in_pseudochromosome=="-" & TE_LTR_pseudo$strand=="-", "+","")))))
+genes_contigs$gene_start_pseudo=genes_contigs$start_gene+genes_contigs$start_tig_pseudochromosome
+
+TE_LTR_pseudo_sub=TE_LTR_pseudo[,c(14,15,16,17)]
+###Pseudochromosome, start contig in pseudochromosome, end contig in pseudochromosome, strand
+write.table(TE_LTR_pseudo_sub,"plot_circular/TE_LTR_pseudo_to_plot_subset.txt",col.names=T,sep="\t",row.names=F)
+
+
+TE_TIR_pseudo$TE_start_pseudo=TE_TIR_pseudo$start+TE_TIR_pseudo$start_tig_pseudochromosome
+TE_TIR_pseudo$TE_end_pseudo=TE_TIR_pseudo$end+TE_TIR_pseudo$start_tig_pseudochromosome
+TE_TIR_pseudo$TE_strand_pseudo=with(TE_TIR_pseudo,ifelse(TE_TIR_pseudo$strand_contig_in_pseudochromosome=="+" & TE_TIR_pseudo$strand=="+", "+",	
+ifelse(TE_TIR_pseudo$strand_contig_in_pseudochromosome=="+" & TE_TIR_pseudo$strand=="-", "-",
+	ifelse(TE_TIR_pseudo$strand_contig_in_pseudochromosome=="-" & TE_TIR_pseudo$strand=="+", "-",	
+	ifelse(TE_TIR_pseudo$strand_contig_in_pseudochromosome=="-" & TE_TIR_pseudo$strand=="-", "+","")))))
+genes_contigs$gene_start_pseudo=genes_contigs$start_gene+genes_contigs$start_tig_pseudochromosome
+
+TE_TIR_pseudo_sub=TE_TIR_pseudo[,c(14,15,16,17)]
+###Pseudochromosome, start contig in pseudochromosome, end contig in pseudochromosome, strand
+write.table(TE_TIR_pseudo_sub,"plot_circular/TE_TIR_pseudo_to_plot_subset.txt",col.names=T,sep="\t",row.names=F)
+
+
+
+
+
+###mads
+MADS=read.table("new_GEMs_MADS_11")
+MADS_coords=left_join(MADS,contigs_pseudo,by=c("V1"="contig"))
+MADS_coords$MADS_strand_pseudo=with(MADS_coords,ifelse(MADS_coords$strand_contig_in_pseudochromosome=="+" & MADS_coords$V4=="+", "+",	
+ifelse(MADS_coords$strand_contig_in_pseudochromosome=="+" & MADS_coords$V4=="-", "-",
+	ifelse(MADS_coords$strand_contig_in_pseudochromosome=="-" & MADS_coords$V4=="+", "-",	
+	ifelse(MADS_coords$strand_contig_in_pseudochromosome=="-" & MADS_coords$V4=="-", "+","")))))
+MADS_coords$MADS_start_pseudo=MADS_coords$V2+MADS_coords$start_tig_pseudochromosome
+
+MADS_coords$MADS_start_pseudo=MADS_coords$start_tig_pseudochromosome+MADS_coords$V2
+MADS_coords$MADS_end_pseudo=MADS_coords$start_tig_pseudochromosome+MADS_coords$V3
+MADS_coords$MADS_start_pseudo=as.numeric(MADS_coords$MADS_start_pseudo)
+MADS_coords$MADS_end_pseudo=as.numeric(MADS_coords$MADS_end_pseudo)
+MADS_subset=MADS_coords[,c(15,17,18,16, 5)]
+###Pseudochromosome, start contig in pseudochromosome, end contig in pseudochromosome, strand, Name gene
+
+write.table(MADS_subset,"plot_circular/MADS",col.names=F,row.names=F,sep="\t")
+
+
+######to plot load
+GC_to_plot_subset=fread("plot_circular/GC_in_each_gene_4columns.txt",header=T,sep="\t")
+methylation_contig_pseudo_to_plot_subset=fread("plot_circular/methylation_contig_pseudo_to_plot_subset.txt",header=T,sep="\t")
+coverage_pseudo_to_plot_subset=fread("plot_circular/coverage_pseudo_to_plot_subset.txt",header=T,sep="\t")
+coverage_pseudo_to_plot_subset=fread("plot_circular/coverage_pseudo_to_plot_subset.txt",header=T,sep="\t")
+coverage_pseudo_to_plot_subset$coverage=coverage_pseudo_to_plot_subset$coverage-min(coverage_pseudo_to_plot_subset$coverage)
+#min=9
+#max 12697.21
+coverage_pseudo_to_plot_subset$coverage=coverage_pseudo_to_plot_subset$coverage*100/12697.21
+#min=0
+#max 99.999998
+TE_LTR_pseudo_sub=fread("plot_circular/TE_LTR_pseudo_to_plot_subset.txt",header=T,sep="\t")
+TE_TIR_pseudo_sub=fread("plot_circular/TE_TIR_pseudo_to_plot_subset.txt",header=T,sep="\t")
+MADS_reorder=read.table("plot_circular/MADS_minus1",header=F)
+
+
+####################
+
+tiff("/users/sfo503/scratch/genome/plot_circular/excelsior_circular_complete14.tiff",res=300,he=400,wi=400,units="mm")
+posTransform.fun = function(region) {
+    return(region)}
+par(lwd = 0.5)
+par(cex=1.1)
+circos.par("cell.padding" = c(0, 0, 0, 0))
+circos.par(points.overflow.warning = FALSE)
+circos.genomicInitialize(pseudo)
+circos.genomicTrackPlotRegion(contigs_pseudo_sub, stack = TRUE, panel.fun = function(region, value, ...) {
+    circos.genomicRect(region, value, col = ifelse(value == "+", "#88CCEE", "#332288"), border = NA)
+}, bg.border = NA, track.height = 0.05)
+
+circos.genomicTrackPlotRegion(genes_contigs_to_plot_sub, ylim = c(-1, 1), stack = TRUE, panel.fun = function(region, value, ...) {
+    circos.genomicRect(region, value, col = ifelse(value == "+", "#CC6677", "#661100"), border = NA)
+}, bg.border = NA, track.height = 0.05)
+
+circos.genomicTrackPlotRegion(GC_to_plot_subset,  stack = TRUE,ylim=c(0,1),panel.fun = function(region, value, ...) {
+    circos.genomicLines(region, value, type = "h", baseline=0, col = "#882255", border = NA)
+
+}, track.height = 0.04)
+
+
+circos.genomicTrackPlotRegion(methylation_contig_pseudo_to_plot_subset, ylim=c(0,1),panel.fun = function(region, value, ...) {
+    circos.genomicLines(region, value, type = "h", baseline= 0, col = "#117733", border = NA)
+}, track.height = 0.04)
+
+circos.genomicTrackPlotRegion(coverage_pseudo_to_plot_subset, panel.fun = function(region, value, ...) {
+    ylim = coverage_pseudo_to_plot_subset$coverage
+    circos.genomicPoints(region, value, area=TRUE,col = "black", border = NA,pch = 19, cex = 0.8)
+}, bg.border = NA, track.height = 0.15)
+
+
+circos.genomicTrackPlotRegion(TE_LTR_pseudo_sub, stack = TRUE,panel.fun = function(region, value, ...) {
+    circos.genomicRect(region, value, col = ifelse(value == "+", "orangered", "black"), border = NA)
+}, bg.border = NA, track.height = 0.05)
+
+
+circos.genomicTrackPlotRegion(TE_TIR_pseudo_sub, stack = TRUE, panel.fun = function(region, value, ...) {
+    circos.genomicRect(region, value,  col = ifelse(value == "+", "goldenrod2", "black"), border = NA)
+}, bg.border = NA, track.height = 0.05)
+
+
+circos.genomicLabels(MADS_reorder, labels.column = 5,side="inside", col = "black")
+
+
+circos.clear()
+dev.off()
+
+
+
+########2. Chord plot against F. pennsylvanica
+#####in R
+library(circlize)
+library(data.table)
+library(tidyverse)
+coords=fread("F.pennsylvanica_F.excelsior_ntJoin_for_syri_k32_w32_n2_500_500_100_i90.coords",header=F)
+
+##remove lines that not include Chr 
+coords <- coords[grepl("Chr", coords$V10), ]
+###coords=subset(coords,coords$V7 >= 0.8)
+sizes<-read.table("F.exc_F.penn_chr_sizes",header=F)
+####sizes is a table that includes in the first column the name of the Fe and Fp chromosomes, second column the start of the chromosome (all 1) and the third column size of the chromosome
+
+getCol <- function(r, g, b, alpha=0.8) {
+  rgb(r/255, g/255, b/255, alpha=alpha)
+}
+
+getColName <- function(col.in, alpha=0.8) {
+  co = as.numeric(col2rgb(col.in))
+  rgb(red=co[1]/255, green=co[2]/255, blue=co[3]/255, alpha=alpha)
+}
+
+getColFromList <- function(color) {
+  if (!is.function(get(color))) { return(getColName(color)) } # "grey", "black"
+  else { return(getColName(color)) } #cigene_21_1"
+}
+
+
+Fe_Chr01=getCol(119,17,85)
+Fe_Chr02 <- getCol(170,68,136)
+Fe_Chr03 <- getCol(204,153,187)
+Fe_Chr04 <- getCol(17,68,119)
+Fe_Chr05<- getCol(68,119,170)
+Fe_Chr06 <- getCol(119,170,221)
+Fe_Chr07 <- getCol(17,119,119)
+Fe_Chr08 <- getCol(68,170,170)
+Fe_Chr09 <- getCol(119,204,204)
+Fe_Chr10 <- getCol(17,119,68)
+Fe_Chr11 <- getCol(68,170,119)
+Fe_Chr12 <- getCol(136,204,170)
+Fe_Chr13 <- getCol(119,119,17)
+Fe_Chr14 <- getCol(170,170,68)
+Fe_Chr15 <- getCol(221,221,119)
+Fe_Chr16 <- getCol(119,68,17)
+Fe_Chr17 <- getCol(170,119,68)
+Fe_Chr18 <- getCol(221,170,119)
+Fe_Chr19 <- getCol(119,17,34)
+Fe_Chr20 <- getCol(170,68,85)
+Fe_Chr21 <- getCol(221,119,136)
+Fe_Chr22 <- getCol(255,255,191)
+Fe_Chr23 <- getCol(102,194,165)
+
+
+coord_penn=coords[,c(10,1,2)]
+###needs to substitue Chr01 by Fp_Chr01
+Chr_to_Fp_chr=read.table("/users/sfo503/scratch/genome/ntJoin_genome/Chr_to_Fp_Chr",header=T)
+coord_penn_name=left_join(coord_penn,Chr_to_Fp_chr,by=c("V10"="Chr"))
+coord_penn_name_2=coord_penn_name[,c(4,2,3)]
+
+
+coord_frax=coords[,c(3,4,11,7)]
+###col 7 is % identity
+###needs to substitute ntJoin by Fe_Chr
+ntJoin_to_Fe_chr=read.table("/users/sfo503/scratch/genome/ntJoin_genome/ntjoin_to_Fe_Chr",header=T)
+coord_frax_name=left_join(coord_frax,ntJoin_to_Fe_chr,by=c("V11"="Scaffold"))
+coord_frax_name_2=coord_frax_name[,c(5,1,2,4)]
+library(tidyr)
+
+
+
+tiff("excelsior_pennsylvanica_genomiclinks.tiff",res=300,he=300,wi=300,units="mm")
+coord_frax_name_2$col <- as.character(unlist(mget(coord_frax_name_2$Pseudochromosome, ifnotfound = list(function(x) getColFromList(x)))))
+coord_frax_name_2=as.data.frame(coord_frax_name_2)
+coord_penn_name_2=as.data.frame(coord_penn_name_2)
+circos.par("cell.padding" = c(0, 0, 0, 0))
+circos.par(points.overflow.warning = FALSE)
+#circos.par(gap.after = c(rep(1.3, 22), 8, rep(1.3, 22), 8))
+circos.par(track.margin=c(0,0))
+circos.genomicInitialize(sizes)
+circos.genomicLink(coord_frax_name_2, coord_penn_name_2, col =coord_frax_name_2$col,border = coord_frax_name_2$col)
+circos.clear()
+dev.off()
+
+
+
