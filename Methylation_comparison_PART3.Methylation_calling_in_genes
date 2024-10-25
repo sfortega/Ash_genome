@@ -1,0 +1,31 @@
+#!/bin/bash
+
+####### Match gene body, upstream and downstream regions with methylation frequency in Sample 1 (tolerant) and Sample 3 (susceptible)
+#######Sample 1 methylation
+awk '{print $1, $4, $5, $2,$3,$6,$7,$8,$9}' F.excelsior_ONT_annotation.gff3 > F.excelsior_ONT_annotation.2.gff3
+sed 's/ /\t/g' F.excelsior_ONT_annotation.2.gff3 > F.excelsior_ONT_annotation.3.gff3
+sed 's/ /\t/g' F.excelsior_ONT_annotation.3.gff3 > F.excelsior_ONT_annotation.4.gff3
+sed 's/chromosome/#chromosome/' all_methylation_sample1_frequency_new.tsv > all_methylation_sample1_frequency_new.2.tsv
+bedtools intersect -a F.excelsior_ONT_annotation.4.gff3 -b  all_methylation_sample1_frequency_new.2.tsv -wo > Sample1_meth_genes
+
+###upstream
+awk 'BEGIN{OFS="\t";FS="\t"} {if ($7 == "+") {print $1,$2-1000, $2-1, $7, $9} else {print $1,$3+1,$3+1000, $7, $9}}' F.excelsior_ONT_annotation.4.gff3 > F.excelsior_ONT_annotation.4.upstream
+sed 's/ /\t/g' F.excelsior_ONT_annotation.4.upstream > F.excelsior_ONT_annotation.4.upstream2
+awk 'BEGIN{OFS="\t";FS="\t"} {if ($2 < 0) {print $1,0, $3, $4, $5} else {print $1,$2,$3, $4, $5}}' F.excelsior_ONT_annotation.4.upstream2 > F.excelsior_ONT_annotation.4.upstream3
+bedtools intersect -a F.excelsior_ONT_annotation.4.upstream3 -b  all_methylation_sample1_frequency_new.2.tsv -wo > Sample1_meth_genes.upstream
+
+###downstream
+awk 'BEGIN{OFS="\t";FS="\t"} {if ($7 == "+") {print $1,$3+1, $3+1000, $7, $9} else {print $1,$2-1000,$2-1, $7, $9}}' F.excelsior_ONT_annotation.4.gff3 > F.excelsior_ONT_annotation.4.downstream
+sed 's/ /\t/g' F.excelsior_ONT_annotation.4.downstream > F.excelsior_ONT_annotation.4.downstream2
+awk 'BEGIN{OFS="\t";FS="\t"} {if ($2 < 0) {print $1,0, $3, $4, $5} else {print $1,$2,$3, $4, $5}}' F.excelsior_ONT_annotation.4.downstream2 > F.excelsior_ONT_annotation.4.downstream3
+bedtools intersect -a F.excelsior_ONT_annotation.4.downstream3 -b  all_methylation_sample1_frequency_new.2.tsv -wo > Sample1_meth_genes.downstream
+
+#######Sample 3 methylation
+sed 's/chromosome/#chromosome/' all_methylation_sample3_frequency.tsv > all_methylation_sample3_frequency.2.tsv
+bedtools intersect -a F.excelsior_ONT_annotation.4.gff3 -b  all_methylation_sample3_frequency.2.tsv -wo > Sample3_meth_genes
+###upstream
+bedtools intersect -a F.excelsior_ONT_annotation.4.upstream3 -b  all_methylation_sample3_frequency.2.tsv -wo > Sample3_meth_genes.upstream
+###downstream
+bedtools intersect -a F.excelsior_ONT_annotation.4.downstream3 -b  all_methylation_sample3_frequency.2.tsv -wo > Sample3_meth_genes.downstream
+
+
