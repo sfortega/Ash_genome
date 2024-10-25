@@ -1,0 +1,5 @@
+mafft --anysymbol --thread 40 Arabidopsis_Prunus_Pyrus_proteins.txt > Arabidopsis_Prunus_Pyrus_proteins_aligned 
+trimal -in Arabidopsis_Prunus_Pyrus_proteins_aligned -out Arabidopsis_Prunus_Pyrus_proteins_aligned_trimmed_output -automated1 -phylip -sgc
+iqtree -s Arabidopsis_Prunus_Pyrus_proteins_aligned_trimmed_output -alrt 1000 -B 1000 --undo
+
+
