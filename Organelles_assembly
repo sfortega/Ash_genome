@@ -1,0 +1,88 @@
+#############
+1. CHLOROPLAST
+#############
+
+#################round1
+minimap2 -ax map-ont fraxinus_angustifolia_chlroplast_complete.txt 20200115_AH_Ash.PromethION.pass.fastq.gz -t 12 >alignment_promethION_chloroplast_ref.sam
+samtools view -S -bo -h  alignment_promethION_chloroplast_ref.sam > output_chloroplasts_promethion_pass.bam
+samtools sort output_chloroplasts_promethion_pass.bam -o output_chloroplasts_promethion_pass_sorted.bam
+samtools view -f 4 output_chloroplasts_promethion_pass_sorted.bam > unmapped_chloroplasts_round1.bam
+samtools view -F 4 output_chloroplasts_promethion_pass_sorted.bam > mapped_chloroplasts_round1.bam
+samtools flagstat mapped_chloroplasts_round1.bam
+samtools fastq mapped_chloroplasts_round1.bam > mapped_chloroplasts_round1.fq
+canu useGrid=0 gridOptions="-t 20:00:00 --maxMemory=$ ((SLURM_MEM_PER_NODE -1)) -maxThreads=$SLURM_CPUS_PER_TASK" -p canu_chloroplast_round1 -d canu_chloroplast_round1 genomeSize=160.0k -nanopore-raw mapped_chloroplasts_round1.fq
+bwa index ./canu_chloroplast_round1/canu_chloroplast_round1.contigs.fasta 
+bwa mem -t 4 -x ont2d ./canu_chloroplast_round1/canu_chloroplast_round1.contigs.fasta mapped_chloroplasts_round1.fq  > mapping_chloroplasts_round1_aftercanu.sam
+mkdir racon
+mkdir medaka_racon
+racon -m 8 -x 6 -g -8 -w 500 -t 4 mapped_chloroplasts_round1.fq mapping_chloroplasts_round1_aftercanu.sam ./canu_chloroplast_round1/canu_chloroplast_round1.contigs.fasta > ./racon/racon_chloroplasts_round1.fq
+medaka_consensus -i mapped_chloroplasts_round1.fq -d racon/racon_chloroplasts_round1.fasta -o ./medaka_racon/canu_chloroplasts_round1_medaka_racon -t $SLURM_CPUS_PER_TASK -b 50
+quast.py -t $SLURM_CPUS_PER_TASK -o ./quast_chloroplast_round1 -R canu_chloroplast_round1/canu_chloroplast_round1.contigs.fasta  racon/racon_chloroplasts_round1.fasta ./medaka_racon/canu_chloroplasts_round1_medaka_racon/consensus.fasta
+
+
+
+#################round2
+minimap2 -ax map-ont medaka_racon/canu_chloroplasts_round1_medaka_racon/consensus.fasta 20200115_AH_Ash.PromethION.pass.fastq.gz -t 12 >alignment_promethION_chloroplast_ref_round2.sam 
+samtools view -S -bo -h alignment_promethION_chloroplast_ref_round2.sam -o output_chloroplasts_promethion_pass_round2.bam
+samtools sort output_chloroplasts_promethion_pass_round2.bam -o output_chloroplasts_promethion_pass_sorted_round2.bam
+samtools view -f 4 output_chloroplasts_promethion_pass_sorted_round2.bam >unmapped_chloroplasts_round2.bam
+samtools view -F 4 -h output_chloroplasts_promethion_pass_sorted_round2.bam >mapped_chloroplasts_round2.bam
+samtools fastq mapped_chloroplasts_round2.bam > mapped_chloroplasts_round2.fq
+
+canu  useGrid=0 gridOptions="t 20:00:00 --maxMemory=$ ((SLURM_MEM_PER_NODE -1)) -maxThreads=$SLURM_CPUS_PER_TASK" -p canu_chloroplast_round2 -d canu_chloroplast_round2 genomeSize=180k -nanopore-raw mapped_chloroplasts_round2.fq
+bwa index ./canu_chloroplast_round2/canu_chloroplast_round2.contigs.fasta
+bwa mem -t 8 -x ont2d ./canu_chloroplast_round2/canu_chloroplast_round2.contigs.fasta mapped_chloroplasts_round2.fq > mapping_chloroplasts_round2_aftercanu.sam
+kdir racon
+kdir medaka
+racon -m 8 -x 6 -g -8 -w 500 -t 8 mapped_chloroplasts_round2.fq mapping_chloroplasts_round2_aftercanu.sam ./canu_chloroplast_round2/canu_chloroplast_round2.contigs.fasta > racon/racon_chloroplasts_round2.fasta
+medaka_consensus -i mapped_chloroplasts_round2.fq -d ./racon/racon_chloroplasts_round2.fasta -o medaka/canu_chloroplasts_round2_medaka_racon -t $SLURM_CPUS_PER_TASK -b 50
+quast.py -t 4 -o ./quast_chloroplast_round2 -R ./canu_chloroplast_round2/canu_chloroplast_round2.contigs.fasta ./racon/racon_chloroplasts_round2.fasta  ./medaka/canu_chloroplast_round2_medaka_racon/consensus.fasta 
+
+
+########ANNOTATION WITH CHLOROBOX
+
+#############
+##2. MITOCHONDRIA
+#############
+################# round1
+
+samtools fastq unmapped_chloroplasts_round2.bam > unmapped_chloroplasts_round2.fq
+minimap2 -ax map-ont mitochondrion_fraxinus_ornus_36_genes.txt unmapped_chloroplasts_round2.fq -t $SLURM_CPUS_PER_TASK >alignment_promethION_mitochondria_ref_round1.sam 
+samtools view -S -bo -h alignment_promethION_mitochondria_ref_round1.sam -o output_mitochondria_promethion_pass_round1.bam
+samtools sort output_mitochondria_promethion_pass_round1.bam -o output_mitochondria_promethion_pass_sorted_round1.bam
+samtools view -h -f 4 output_mitochondria_promethion_pass_sorted_round1.bam >unmapped_mitochondria_round1.bam
+samtools view -h -F 4 output_mitochondria_promethion_pass_sorted_round1.bam >mapped_mitochondria_round1.bam
+samtools fastq mapped_mitochondria_round1.bam > mapped_mitochondria_round1.fq
+samtools flagstat mapped_mitochondria_round1.bam >flagstat_mitochondria_round1.txt
+
+canu  useGrid=0 gridOptions="-t 20:00:00 --maxMemory=$ ((SLURM_MEM_PER_NODE -1)) -corMinCoverage=0 -corOutCoverage=999 -maxThreads=$SLURM_CPUS_PER_TASK" -p canu_mitochondria_round1 -d canu_mitochondria_round1 genomeSize=300k -nanopore-raw mapped_mitochondria_round1.fq
+
+bwa index ./canu_mitochondria_round1/canu_mitochondria_round1.contigs.fasta
+bwa mem -t 8 -x ont2d ./canu_mitochondria_round1/canu_mitochondria_round1.contigs.fasta mapped_mitochondria_round1.fq > mapping_mitochondria_round1_aftercanu.sam
+mkdir racon
+mkdir medaka_racon
+racon -m 8 -x 6 -g -8 -w 500 -t 8 mapped_mitochondria_round1.fq mapping_mitochondria_round1_aftercanu.sam ./canu_mitochondria_round1/canu_mitochondria_round1.contigs.fasta > racon/racon_mitochondria_round1.fasta
+medaka_consensus -i mapped_mitochondria_round1.fq -d ./racon/racon_mitochondria_round1.fasta -o medaka_racon/medaka_racon_mitochondria_round1 -t $SLURM_CPUS_PER_TASK -b 50
+quast.py -t 4 -o ./quast_mitochondria_round1 -R ./canu_mitochondria_round1/canu_mitochondria_round1.contigs.fasta ./racon/racon_mitochondria_round1.fasta  ./medaka_racon/medaka_racon_mitochondria_round1/consensus.fasta 
+
+
+######USE CHLOROBOX to ANNOTATE with species:
+#Helianthus annuus, Helianthus grosseserratus, Helianthus strumosus, Chrysanthemum boreale, Diplostephium hartwegii, Lactuca saligna, Lactuca sativa, Lactuca serriola, Codonopsis lanceolata, Platycodon grandiflorus, Daucus carota subsp. sativus, Bupleurum falcatum, Hesperelaea palmeri, Dorcoceras hygrometricum, Ajuga reptans, Rotheca serrata, Salvia miltiorrhiza, Castilleja paramensis, Erythranthe guttata, Utricularia reniformis, Hyoscyamus niger, Physochlaina orientalis, Capsicum annuum, Solanum aethiopicum, Solanum lycopersicum, Solanum pennellii, Solanum melongena, Solanum torvum, Nicotiana attenuata, Nicotiana sylvestris, Nicotiana tabacum, Ipomoea nil, Asclepias syriaca, Cynanchum auriculatum, Rhazya stricta, Vaccinium macrocarpon, Camellia sinensis, Gossypium arboreum, Gossypium barbadense, Gossypium davidsonii, Gossypium harknessii, Gossypium hirsutum, Gossypium raimondii, Gossypium thurberi, Gossypium trilobum, Hibiscus cannabinus, Bombax ceiba, Corchorus capsularis, Corchorus olitorius, Sapindus muko#rossi, Spondias mombin, Spondias tuberosa, Melicope pteleifolia, Citrus sinensis, Boechera stricta, Arabidopsis thaliana, Capsella rubella, Arabis alpina, Brassica carinata, Brassica juncea, Brassica napus, Brassica nigra, Brassica oleracea, Brassica rapa, Brassica rapa subsp. oleifera, Raphanus sativus, Sinapis arvensis, Batis maritima, Carica papaya, Eucalyptus grandis, Lagerstroemia indica, Geranium maderense, Glycine soja, Glycine max, Phaseolus vulgaris, Vigna angularis, Vigna radiata, Pongamia pinnata, Medicago truncatula, Trifolium aureum, Trifolium grandiflorum, Trifolium meduseum, Trifolium pratense, Lotus japonicus, Ammopiptanthus mongolicus, Ammopiptanthus nanus, Sophora flavescens, Styphnolobium japonicum, Acacia ligulata, Leucaena trichandra, Libidibia coriaria, Haematoxylum brasiletto, Senna occidentalis, Senna tora, Tamarindus indica, Epirixanthes elongata, Passiflora edulis, Populus alba, Populus davidiana, Populus tremula, Populus tremula x Populus alba, Salix cardiophylla, Salix paraflabell#aris, Salix polaris, Salix purpurea, Salix suchowensis, Manihot esculenta, Ricinus communis, Eriobotrya japonica, Malus domestica, Sorbus aucuparia, Sorbus torminalis, Prunus avium, Morus notabilis, Cannabis sativa, Ziziphus jujuba, Fagus sylvatica, Cucurbita pepo, Citrullus lanatus, Cucumis sativus, Cucumis sativus, Cucumis sativus, Luffa acutangula, Vitis vinifera, Mirabilis himalaica, Silene latifolia, Chenopodium quinoa, Spinacia oleracea, Beta macrocarpa, Beta vulgaris subsp. maritima, Beta vulgaris subsp. vulgaris, Nepenthes ventricosa x Nepenthes alata, Viscum album, Aegilops speltoides var. ligustica, Triticum aestivum, Triticum timopheevii, Oryza minuta, Oryza rufipogon, Oryza sativa Indica Group, Oryza sativa Japonica Group, Eleusine indica, Saccharum officinarum, Sorghum bicolor, Tripsacum dactyloides, Zea luxurians, Zea mays subsp. mays, Zea mays subsp. parviglumis, Zea perennis, Phoenix dactylifera, Cocos nucifera, Allium cepa, Spirodela polyrhiza, Zostera marina, Liriodendron tulipifera, Magnol#ia biondii, Nymphaea colorata, Nelumbo nucifera, Schisandra sphenanthera, Pinus taeda, Cycas taitungensis, Welwitschia mirabilis, Ginkgo biloba, Ophioglossum californicum, Psilotum nudum, Phlegmariurus squarrosus, Sanionia uncinata, Anomodon rugelii, Brachythecium rivulare, Callicladium imponens, Climacium americanum, Pseudanomodon attenuatus, Ptychomnion cygnisetum, Bartramia patens, Bartramia pomiformis, Lewinskya speciosa, Orthotrichum bicolor, Orthotrichum callistomum, Orthotrichum diaphanum, Orthotrichum gymnostomum, Orthotrichum macrocephalum, Orthotrichum stellatum, Plenogemma phyllantha, Stoneobryum bunyaense, Stoneobryum mirum, Ulota crispa, Ulota hutchinsiae, Zygodon viridissimus, Mielichhoferia elongata, Pohlia nutans, Tetraplodon fuegianus, Bucklandiella orthotrichacea, Codriophorus aciculare, Dilutineuron laevigatum, Frisvollia varia, Niphotrichum elongatum, Niphotrichum ericoides, Racomitrium emersum, Racomitrium lanuginosum, Chionoloma tenuirostre, Syntrichia filaris, Chorisodontium aciphyllum#, Buxbaumia aphylla, Funaria hygrometrica, Atrichum angustatum, Physcomitrium patens, Polytrichum commune, Tetraphis pellucida, Andreaea wangiana, Sphagnum palustre, Aneura pinguis, Pleurozia purpurea, Fossombronia foveolata, Calypogeia arguta, Calypogeia fissa subsp. neogaea, Calypogeia integristipula, Calypogeia suecica, Gymnomitrion concinnatum, Scapania ampliata, Trilophozia quinquedentata, Porella platyphylla, Ptilidium ciliare, Dumortiera hirsuta, Marchantia paleacea, Marchantia polymorpha subsp. ruderalis, Riccia fluitans, Haplomitrium hookeri, Treubia lacunosa, Anthoceros agrestis, Anthoceros angustus, Anthoceros punctatus, Nothoceros aenigmaticus, Phaeoceros laevis, Leiosporoceros dussii, 
+
+#####get
+#mitochondria_round1_GLOBAL_multi-GFF3.gff3
+gffread -g medaka_racon/medaka_racon_mitochondria_round1/consensus.fasta  -w mitochondria_round1_GLOBAL_multi-GFF3.gff3 -F
+
+
+
+#######
+##DO a second ROUND FOR FILTERING MORE SEQUENCES BEFORE THE GENOME
+#######
+minimap2 -ax map-ont medaka_racon/medaka_racon_mitochondria_round1/consensus.fasta unmapped_chloroplasts_round2.fq -t $SLURM_CPUS_PER_TASK >alignment_promethION_mitochondria_ref_round2.sam 
+samtools view -S -bo -h alignment_promethION_mitochondria_ref_round2.sam -o output_mitochondria_promethion_pass_round2.bam
+samtools sort output_mitochondria_promethion_pass_round2.bam -o output_mitochondria_promethion_pass_sorted_round2.bam
+samtools view -h -f 4 output_mitochondria_promethion_pass_sorted_round2.bam >unmapped_mitochondria_round2.bam
+samtools view -h -F 4 output_mitochondria_promethion_pass_sorted_round2.bam >mapped_mitochondria_round2.bam
+samtools fastq mapped_mitochondria_round2.bam > mapped_mitochondria_round2.fq
+samtools flagstat mapped_mitochondria_round2.bam >flagstat_mitochondria_round2.txt
+samtools fastq unmapped_mitochondria_round2.bam >unmapped_mitochondria_round2.fq
