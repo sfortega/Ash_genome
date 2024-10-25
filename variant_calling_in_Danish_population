@@ -295,6 +295,9 @@ java -jar SnpSift.jar filter "(ANN[*].EFFECT has 'missense_variant')|(ANN[*].EFF
 
 ############################PART 6
 ############################PSIKO and HAPMAP (G matrix) for AT
+#####obtaining .geno before PSIKO
+library(LEA)
+vcf2geno("star_Danish_all_combined_genotypes_SNPs_filtered_all_2_ordered.vcf", output.file = "star_Danish_all_combined_genotypes_SNPs_filtered_all_2_ordered.geno", force = TRUE)
 
 #######PSIKO
 #vcftools --vcf star_Danish_all_combined_genotypes_SNPs_filtered_all_3.recode_2_exons.vcf --out Danish_exons --plink
