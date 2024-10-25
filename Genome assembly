@@ -1,0 +1,380 @@
+############################
+##1. GENOME ASSEMBLY
+############################
+canu  useGrid=0 gridOptions="-t 40:00:00 --maxMemory=$ ((SLURM_MEM_PER_NODE -1)) -maxThreads=$SLURM_CPUS_PER_TASK" -p canu_genome -d canu_genome genomeSize=900.0m -nanopore-raw unmapped_mitochondria_round2.fq
+samtools faidx canu_genome_2/canu_genome_2.contigs.fasta
+minimap2 -t $SLURM_CPUS_PER_TASK -ax map-ont canu_genome_2/canu_genome_2.contigs.fasta /mnt/lustre/groups/bio-ash-2019/20200115_AH_Ash.PromethION.pass.fastq.gz --secondary=no | samtools sort -m 1G -o purge_haplotigs_canu/aligned_canu_genome_all_reads.bam -T purge_haplotigs_canu/tmp.ali
+samtools index purge_haplotigs_canu/aligned_canu_genome_all_reads.bam
+./purge_haplotigs/bin/purge_haplotigs hist -b purge_haplotigs_canu/aligned_canu_genome_all_reads.bam -g canu_genome_2/canu_genome_2.contigs.fasta -t $SLURM_CPUS_PER_TASK -d 400
+./purge_haplotigs/bin/purge_haplotigs cov -i / purge_haplotigs_canu/aligned_canu_genome_all_reads.bam.gencov -l 3 -m 45 -h 390 -o purge_haplotigs_canu/aligned_canu_coverage_stats.csv -j 80 -s 80
+./purge_haplotigs/bin/purge_haplotigs purge -b purge_haplotigs_canu/aligned_canu_genome_all_reads.bam -g canu_genome_2/canu_genome_2.contigs.fasta -t $SLURM_CPUS_PER_TASK -d -v -r genome_canu_for_purge_repeats_LTR_mod.bed -c purge_haplotigs_canu/aligned_canu_coverage_stats.csv -o curated_genome_canu_2021_purge_haplotigs_repeats_LTR_m200_a80 -m 200 -a 80
+seqkit stat -a curated_genome_canu_2021_purge_haplotigs_repeats_LTR_m200_a80.fasta > curated_genome_canu_2021_purge_haplotigs_repeats_LTR_m200_a80.txt
+
+####polish using pilon with Nextera all 
+bwa index  curated_genome_canu_2021_purge_haplotigs_repeats_LTR_m200_a80.fasta
+bwa mem curated_genome_canu_2021_purge_haplotigs_repeats_LTR_m200_a80.fasta ./ERR1399574_1.fastq.gz ./ERR1399574_2.fastq.gz -t $SLURM_CPUS_PER_TASK > pilon/mapping_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.sam
+samtools view -S -bo -h pilon/mapping_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.sam -o /pilon/mapping_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.bam
+samtools sort pilon/mapping_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.bam -o pilon/mapping_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera_sorted.bam 
+samtools index pilon/mapping_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera_sorted.bam
+
+java -Xmx200G -jar ./pilon-1.24.jar --genome curated_genome_canu_2021_purge_haplotigs_repeats_LTR_m200_a80.fasta --frags pilon/mapping_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera_sorted.bam --diploid --fix "all" --output pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera --changes --threads 40 
+seqkit stat -a pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta > /users/sfo503/scratch/genome/pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera_seqkit.txt
+quast.py -t 40 -o ./quast_genome -R ./canu_genome_2/canu_genome_2.contigs.fasta pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta
+
+
+busco --augustus --long -r -i pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta -l eudicots_odb10 -c 20 -o results_genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera_eudicots_rep -m genome
+busco --augustus --long -f -i pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta -l embryophyta_odb10 -c 20 -o results_genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera_embryophyta -m genome
+
+
+#######calculate Q phred
+seqkit stats 20200115_AH_Ash.PromethION.pass.fastq -T -a > Q_files.txt
+
+
+
+
+############################
+##2. METHYLATION
+############################
+nanopolish index -d 20200115_AH_Ash_raw_data/ -s sequencing_summary_PAE36880_cd0eb990.PromethION.txt 20200115_AH_Ash.PromethION.pass.fastq.gz
+minimap2 -ax map-ont pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta 20200115_AH_Ash.PromethION.pass.fastq.gz -t $SLURM_CPUS_PER_TASK > alignment_genome_canu_purge_pilon_for_nanopolish.sam
+samtools view -S -bo -h alignment_genome_canu_purge_pilon_for_nanopolish.sam -o output_genome_canu_purge_pilon_for_nanopolish.bam
+samtools sort output_genome_canu_purge_pilon_for_nanopolish.bam -o output_genome_canu_purge_pilon_sorted_for_nanopolish.bam
+samtools index output_genome_canu_purge_pilon_sorted_for_nanopolish.bam
+####divide in smaller fragments to call methylation
+mkdir nanopolish_makerange_smaller
+python nanopolish_makerange.py  --segment-length 2000 --overlap-length 0  pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta > nanopolish/nanopolish_makerange_smaller/genome_segmented_for_nanopolish_0.1mb.txt
+#filename=nanopolish/nanopolish_makerange_smaller/genome_segmented_for_nanopolish_0.1mb.txt
+while read -r line; do
+	name="$line"
+	echo "line is -$name"
+	nanopolish call-methylation -t 40 --verbose --progress -q cpg -r 20200115_AH_Ash.PromethION.pass.fastq.gz -b output_genome_canu_purge_pilon_sorted_for_nanopolish.bam -g pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta -w "$name" > ./nanopolish_genome_divided/methylation_genome_canu_purge_racon_repeated_divided_$name.tsv
+done < <(sed -n 1,100000p "$filename")
+####repeat loop above for all the lines in the file (total 435240)
+
+
+###move them to the same folder
+mkdir  nanopolish/all_nanopolish_files 
+filename=nanopolish/folders.txt
+while read -r line; do 
+          cp "$line"/*.tsv nanopolish/all_nanopolish_files/
+done < "$filename"
+
+###concatenate all files
+find ./all_nanopolish_files/  -type f -exec cat {} \; > all_methylation_data_genome_Ash.tsv
+sed -i 's/num_motifs/num_cpgs/g'  all_methylation_data_genome_Ash.tsv
+
+####remove duplicated headers 
+awk '!/read_name/ || !a[/read_name/]++' all_methylation_data_genome_Ash.tsv > all_methylation_data_genome_Ash_no_dups.tsv
+sed -i 's/num_cpgs/num_motifs/g'  all_methylation_data_genome_Ash_no_dups.tsv
+
+sed -i 's/num_motifs/num_cpgs/g'  all_methylation_data_genome_Ash_no_dups.tsv
+awk -F'\t' ' $10>=1 {print $0}' OFS='\t' all_methylation_data_genome_Ash_no_dups.tsv > all_methylation_data_genome_Ash_no_dups_2.tsv
+python calculate_methylation_frequency.py all_methylation_data_genome_Ash_no_dups_2.tsv > all_methylation_data_genome_Ash_frequency.tsv
+
+############################
+##3. TEs and REPETITIVE REGIONS
+############################
+EDTA.pl --genome pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta --species others --step all ----cds F.excelsior.annotation.cds --sensitive 0 --anno 1 --evaluate 1  --threads 40
+
+
+
+############################
+##4. ANNOTATION
+############################
+###modify for braker.pl
+export AUGUSTUS_CONFIG_PATH=.../braker/Augustus/config/
+export AUGUSTUS_BIN_PATH=.../envs/braker2/bin/
+export AUGUSTUS_CONFIG_PATH=.../Augustus/scripts/
+###
+export GENEMARK_PATH=.../gmes_petap.pl
+export BAMTOOLS_PATH=.../envs/braker2/bin/
+export DIAMOND_PATH=.../braker/
+export CDBTOOLS_PATH.../cdbtools/
+
+RepeatModeler/BuildDatabase -name database_ash_braker_genome -engine ncbi  pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta
+RepeatModeler/RepeatModeler -database database_ash_braker_genome -engine ncbi -LTRStruct -pa $SLURM_CPUS_PER_TASK
+RepeatMasker/RepeatMasker -pa 100 -gff -lib /users/sfo503/scratch/genome/braker/RM_148112.SunJan20956302022/tmpConsensi.fa pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta -dir genome_masked_new genome_masked.fasta
+
+
+######RNA seq data
+###cambium mother
+mkdir braker/cambium_mother
+wget -P braker/cambium_mother ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR139/ERR1399492/M_C1_ACAGTG_L006_R1_001.fastq.gz
+wget -Pbraker/cambium_mother ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR139/ERR1399492/M_C1_ACAGTG_L006_R2_001.fastq.gz
+
+
+###flower mother
+mkdir braker/flower_mother
+wget -P braker/flower_mother ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR139/ERR1399493/M_F1_CGATGT_L006_R1_001.fastq.gz
+wget -P braker/flower_mother ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR139/ERR1399493/M_F1_CGATGT_L006_R2_001.fastq.gz
+
+#mkdir braker/roots_mother
+##roots mother
+wget -P braker/roots_mother ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR139/ERR1399494/M_R2_TGACCA_L006_R1_001.fastq.gz
+wget -P braker/roots_mother ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR139/ERR1399494/M_R2_TGACCA_L006_R2_001.fastq.gz
+
+
+mkdir braker/leaf_mother
+###leaf mother
+wget -P braker/leaf_mother ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR139/ERR1399495/m_l1_ATCACG_L006_R1_001.fastq.gz
+wget -P braker/leaf_mother ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR139/ERR1399495/m_l1_ATCACG_L006_R2_001.fastq.gz
+
+mkdir braker/leaf_2461s
+###leaf 2451s
+wget -P braker/leaf_2461s ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR139/ERR1399573/S_L1_TTAGGC_L006_R1_001.fastq.gz
+wget -P braker/leaf_2461s ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR139/ERR1399573/S_L1_TTAGGC_L006_R2_001.fastq.gz
+
+###now trimm
+##needs list of names ls *.gz >list.txt
+
+#file=braker/leaf_mother/list_leaf_mother
+name=m_l1_ATCACG_L006_R
+name1=S_L1_TTAGGC_L006
+name2=M_R2_TGACCA_L006
+name3=M_C1_ACAGTG_L006
+name4=M_F1_CGATGT_L006
+mkdir braker/leaf_mother/${name}_trimmomatic/
+mkdir braker/leaf_2461s/${name1}_trimmomatic/
+mkdir braker/roots_mother/${name2}_trimmomatic/
+mkdir braker/cambium_mother/${name3}_trimmomatic/
+mkdir braker/flower_mother/${name4}_trimmomatic/
+
+###leaf_mother tree
+name=m_l1_ATCACG_L006_R
+java -jar trimmomatic-0.39.jar PE braker/leaf_mother/${name}1_001.fastq.gz braker/leaf_mother/${name}2_001.fastq.gz braker/leaf_mother/${name}_trimmomatic/${name}_forward_paired.fastq.gz braker/leaf_mother/${name}_trimmomatic/${name}_forward_unpaired.fastq.gz braker/leaf_mother/${name}_trimmomatic/${name}_reverse_paired.fastq.gz braker/leaf_mother/${name}_trimmomatic/${name}_reverse_unpaired.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:keepBothreads LEADING:3 TRAILING:3 MINLEN:36
+###leaf_2461
+name1=S_L1_TTAGGC_L006
+java -jar trimmomatic-0.39.jar PE braker/leaf_2461s/${name1}_R1_001.fastq.gz braker/leaf_2461s/${name1}_R2_001.fastq.gz braker/leaf_2461s/${name1}_trimmomatic/${name1}_forward_paired.fastq.gz braker/leaf_2461s/${name1}_trimmomatic/${name1}_forward_unpaired.fastq.gz braker/leaf_2461s/${name1}_trimmomatic/${name1}_reverse_paired.fastq.gz braker/leaf_2461s/${name1}_trimmomatic/${name1}_reverse_unpaired.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:keepBothreads LEADING:3 TRAILING:3 MINLEN:36
+
+###roots_mother tree
+name2=M_R2_TGACCA_L006
+java -jar trimmomatic-0.39.jar PE braker/roots_mother/${name2}_R1_001.fastq.gz braker/roots_mother/${name2}_R2_001.fastq.gz braker/roots_mother/${name2}_trimmomatic/${name2}_forward_paired.fastq.gz braker/roots_mother/${name2}_trimmomatic/${name2}_forward_unpaired.fastq.gz braker/roots_mother/${name2}_trimmomatic/${name2}_reverse_paired.fastq.gz braker/roots_mother/${name2}_trimmomatic/${name2}_reverse_unpaired.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:keepBothreads LEADING:3 TRAILING:3 MINLEN:36
+
+###cambium_mother tree
+name3=M_C1_ACAGTG_L006
+java -jar trimmomatic-0.39.jar PE braker/cambium_mother/${name3}_R1_001.fastq.gz braker/cambium_mother/${name3}_R2_001.fastq.gz braker/cambium_mother/${name3}_trimmomatic/${name3}_forward_paired.fastq.gz braker/cambium_mother/${name3}_trimmomatic/${name3}_forward_unpaired.fastq.gz braker/cambium_mother/${name3}_trimmomatic/${name3}_reverse_paired.fastq.gz braker/cambium_mother/${name3}_trimmomatic/${name3}_reverse_unpaired.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:keepBothreads LEADING:3 TRAILING:3 MINLEN:36
+
+###flower_mother tree
+name4=M_F1_CGATGT_L006
+java -jar trimmomatic-0.39.jar PE braker/flower_mother/${name4}_R1_001.fastq.gz braker/flower_mother/${name4}_R2_001.fastq.gz braker/flower_mother/${name4}_trimmomatic/${name4}_forward_paired.fastq.gz braker/flower_mother/${name4}_trimmomatic/${name4}_forward_unpaired.fastq.gz braker/flower_mother/${name4}_trimmomatic/${name4}_reverse_paired.fastq.gz braker/flower_mother/${name4}_trimmomatic/${name4}_reverse_unpaired.fastq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:keepBothreads LEADING:3 TRAILING:3 MINLEN:36
+
+
+
+###STAR for mapping
+STAR --runMode genomeGenerate --runThreadN 40 --genomeDir star_genome --genomeFastaFiles braker/genome_masked_new/genome_masked.fasta
+
+####do this with both forwards and reverse
+
+###leaf mother tree
+STAR --twopassMode Basic --genomeDir star_genome --runThreadN 40 --readFilesIn braker/leaf_mother/${name}_trimmomatic/${name}_forward_paired.fastq.gz braker/leaf_mother/${name}_trimmomatic/${name}_reverse_paired.fastq.gz --readFilesCommand zcat --outFileNamePrefix star_leaf_mother_paired --outSAMtype BAM Unsorted
+samtools sort braker/star_leaf_mother_pairedAligned.out.bam --threads $SLURM_CPUS_PER_TASK -o  braker/star_leaf_mother_paired_sorted_Aligned.out.bam
+samtools index braker/star_leaf_mother_paired_sorted_Aligned.out.bam
+
+####leaf 2461s
+STAR --twopassMode Basic --genomeDir star_genome --runThreadN 40 --readFilesIn braker/leaf_2461s/${name1}_trimmomatic/${name1}_forward_paired.fastq.gz leaf_2461s/${name1}_trimmomatic/${name1}_reverse_paired.fastq.gz --readFilesCommand zcat --outFileNamePrefix star_leaf_2461s_paired --outSAMtype BAM Unsorted
+samtools sort braker/star_leaf_2461s_pairedAligned.out.bam --threads $SLURM_CPUS_PER_TASK -o  braker/star_leaf_2461s_paired_sorted_Aligned.out.bam
+samtools index braker/star_leaf_2461s_paired_sorted_Aligned.out.bam
+
+###roots mother tree
+STAR --twopassMode Basic --genomeDir star_genome --runThreadN 40 --readFilesIn braker/roots_mother/${name2}_trimmomatic/${name2}_forward_paired.fastq.gz braker/roots_mother/${name2}_trimmomatic/${name2}_reverse_paired.fastq.gz --readFilesCommand zcat --outFileNamePrefix star_roots_2461s_paired --outSAMtype BAM Unsorted
+samtools sort braker/star_roots_2461s_pairedAligned.out.bam --threads $SLURM_CPUS_PER_TASK -o  braker/star_roots_mother_paired_sorted_Aligned.out.bam
+samtools index braker/star_roots_mother_paired_sorted_Aligned.out.bam
+
+###cambium mother tree
+STAR --twopassMode Basic --genomeDir star_genome --runThreadN 40 --readFilesIn braker/cambium_mother/${name3}_trimmomatic/${name3}_forward_paired.fastq.gz braker/cambium_mother/${name3}_trimmomatic/${name3}_reverse_paired.fastq.gz --readFilesCommand zcat --outFileNamePrefix star_cambium_mother_paired --outSAMtype BAM Unsorted
+samtools sort braker/star_cambium_mother_pairedAligned.out.bam --threads $SLURM_CPUS_PER_TASK -o  braker/star_cambium_mother_forward_paired_sorted_Aligned.out.bam
+samtools index braker/star_cambium_mother_paired_sorted_Aligned.out.bam
+
+###flower mother tree
+STAR --twopassMode Basic --genomeDir star_genome --runThreadN 40 --readFilesIn flower_mother/${name4}_trimmomatic/${name4}_forward_paired.fastq.gz flower_mother/${name4}_trimmomatic/${name4}_reverse_paired.fastq.gz --readFilesCommand zcat --outFileNamePrefix star_flower_mother_paired --outSAMtype BAM Unsorted
+samtools sort braker/star_flower_mother_pairedAligned.out.bam --threads $SLURM_CPUS_PER_TASK -o  braker/star_flowers_mother_paired_sorted_Aligned.out.bam
+samtools index braker/star_flower_mother_paired_sorted_Aligned.out.bam
+
+
+
+########GENEMARK with Viridiplantae proteins
+gmes_petap.pl --EP --verbose --seq braker/genome_masked_new/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked  --cores 450 --EP --dbep proteins_augustus_viridiplantae.fasta --soft_mask 1000
+mkdir gmes_petap_pl_with_viridiplantae
+mv genemark_es.gtf braker/gmes_petap_pl_with_viridiplantae
+
+#/ProtHint/bin/prothint.py --threads=500 braker/genome_masked_new/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked  /users/sfo503/scratch/genome/braker_error/proteins_augustus_viridiplantae.fasta --geneMarkGtf genemark_es.gtf
+braker.pl --useexisting --softmasking --species=Fraxinus_excelsior_Ash_only_proteins --genome=braker/genome_masked_new/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked  --cores 120  --epmode --hints=braker/prothint_augustus.gff --geneMarkGtf=genemark_es.gtf --AUGUSTUS_CONFIG_PATH=.../Augustus/config
+
+
+
+#####Follow alternate protocol 1
+bam2hints --intronsonly --in=braker/star_leaf_mother_paired_sorted_Aligned.out.bam --out=leaf_mother_introns.gff
+bam2hints --intronsonly --in=braker/star_leaf_2461s_paired_sorted_Aligned.out.bam --out=leaf_2461s_introns.gff
+bam2hints --intronsonly --in=braker/star_roots_mother_paired_sorted_Aligned.out.bam --out=root_mother_introns.gff
+bam2hints --intronsonly --in=braker/star_cambium_mother_forward_paired_sorted_Aligned.out.bam --out=cambium_mother_introns.gff
+bam2hints --intronsonly --in=braker/star_flowers_mother_paired_sorted_Aligned.out.bam --out=flower_mother_introns.gff
+
+####use script in BRAKER 
+filterIntronsFindStrand.pl braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked leaf_mother_introns.gff --score > leaf_mother_introns.f.gff
+filterIntronsFindStrand.pl braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked leaf_2461s_introns.gff --score > leaf_2461s_introns.f.gff
+filterIntronsFindStrand.pl braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked root_mother_introns.gff --score > root_mother_introns.f.gff
+filterIntronsFindStrand.pl braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked cambium_mother_introns.gff --score > cambium_mother_introns.f.gff
+filterIntronsFindStrand.pl braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked flower_mother_introns.gff --score > flower_mother_introns.f.gff
+
+#####Now script in GeneMark 
+export PERLLIB=.../envs/braker2/lib/site_perl/5.26.2
+gmes_petap.pl --verbose --sequence=braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked --ET=leaf_mother_introns.f.gff --cores=100 --soft_mask 1000
+gmes_petap.pl --verbose --sequence=braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked --ET=leaf_2461s_introns.f.gff --cores=100 --soft_mask 1000
+gmes_petap.pl --verbose --sequence=braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked --ET=root_mother_introns.f.gff --cores=100 --soft_mask 1000
+gmes_petap.pl --verbose --sequence=braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked --ET=cambium_mother_introns.f.gff --cores=100 --soft_mask 1000
+gmes_petap.pl --verbose --sequence=braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked --ET=flower_mother_introns.f.gff --cores=100 --soft_mask 1000
+
+
+#use braker now with the genemark files
+
+braker.pl --softmasking --species=Fraxinus_excelsior_Ash_RNA_leaf_mother --genome=braker/genome_masked_new/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked  --cores 40 --bam=braker/star_leaf_mother_paired_sorted_Aligned.out.bam --gff3 --AUGUSTUS_CONFIG_PATH=.../Augustus/config --geneMarkGtf=braker/braker_RNA/leaf_mother/genemark_leaf_mother.gtf
+braker.pl --softmasking --species=Fraxinus_excelsior_Ash_RNA_leaf_2461s --genome=braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked  --cores 120 --bam=braker/star_leaf_2461s_paired_sorted_Aligned.out.bam --gff3 --AUGUSTUS_CONFIG_PATH=.../Augustus/config --geneMarkGtf=braker/braker_RNA/leaf_2461s/genemark_leaf_2461s.gtf
+braker.pl --softmasking --species=Fraxinus_excelsior_Ash_RNA_root_mother --genome=braker/genome_masked_new/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked  --cores 120 --bam=braker/star_roots_mother_paired_sorted_Aligned.out.bam --gff3 --AUGUSTUS_CONFIG_PATH=.../Augustus/config --geneMarkGtf=braker/braker_RNA/roots_mother/genemark_roots_mother.gtf
+braker.pl --softmasking --species=Fraxinus_excelsior_Ash_RNA_cambium_mother --genome=braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked  --cores 120 --bam=braker/star_cambium_mother_forward_paired_sorted_Aligned.out.bam --gff3 --AUGUSTUS_CONFIG_PATH=.../Augustus/config --geneMarkGtf=braker/braker_RNA/cambium_mother/genemark_cambium_mother.gtf
+braker.pl --softmasking --species=Fraxinus_excelsior_Ash_RNA_flower_mother --genome=braker/genome_masked/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked  --cores 120 --bam=braker/star_flowers_mother_paired_sorted_Aligned.out.bam --gff3 --AUGUSTUS_CONFIG_PATH=.../Augustus/config --geneMarkGtf=braker/braker_RNA/flower_mother/genemark_flower_mother.gtf
+
+
+#####COMBINE WITH TSEBRA
+###RNA
+/TSEBRA/bin/fix_gtf_ids.py --gtf braker/braker_RNA/leaf_mother/braker/braker_leaf_mother.gtf --out braker_leaf_mother_fixed.gtf
+TSEBRA/bin/fix_gtf_ids.py --gtf braker/braker_RNA/leaf_2461s/braker/braker_leaf_2461s.gtf --out braker_leaf_2461s_fixed.gtf
+TSEBRA/bin/fix_gtf_ids.py --gtf braker/braker_RNA/roots_mother/braker/braker_roots_mother.gtf --out braker_root_mother_fixed.gtf
+TSEBRA/bin/fix_gtf_ids.py --gtf braker/braker_RNA/cambium_mother/braker/braker_cambium_mother.gtf --out braker_cambium_mother_fixed.gtf
+TSEBRA/bin/fix_gtf_ids.py --gtf braker/braker_RNA/flower_mother/braker/braker_flower_mother.gtf --out braker_flower_mother_fixed.gtf
+###proteins
+TSEBRA/bin/fix_gtf_ids.py --gtf braker_error/braker/braker_proteins.gtf --out braker_proteins_fixed.gtf
+
+####default configuration
+TSEBRA/bin/tsebra.py -g braker_leaf_mother_fixed.gtf,braker_leaf_2461s_fixed.gtf,braker_root_mother_fixed.gtf,braker_cambium_mother_fixed.gtf,braker_flower_mother_fixed.gtf,braker_proteins_fixed.gtf -c /users/sfo503/scratch/genome/braker/TSEBRA/config/default.cfg -e hintsfile_leaf_mother.gff,hintsfile_leaf_2461s.gff,hintsfile_roots_mother.gff,hintsfile_cambium_mother.gff,hintsfile_flower_mother.gff,hintsfile.gff -o RNA_proteins_braker_combined_default.gtf
+TSEBRA/bin/rename_gtf.py --gtf braker/RNA_proteins_braker_combined_default.gtf --prefix Fe --translation_tab Fe_translation_default.tab --out tsebra_results_RNA_proteins_default.gtf
+Augustus/scripts/gtf2aa.pl braker/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta  braker/tsebra_results_RNA_proteins_default.gtf Fe_proteins_default.fa
+Augustus/scripts/gtf2gff.pl <braker/tsebra_results_RNA_proteins_default.gtf --out=tsebra_results_RNA_proteins_default.gff
+###now from gff to mrNA
+gffread -g braker/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta tsebra_results_RNA_proteins_default.gtf  -w Fe_cDNA_gfffile_default.fasta -F
+awk '{a[$3]++}END{for(k in a){print k,a[k]}}' tsebra_results_RNA_proteins_default.gtf > gtf_file_annotations_default.txt
+
+
+
+############################
+##5. ANNOTATION FILTERING AND FUNCTIONAL CHARACTERIZATION
+############################
+###first eggnog and then filtering with gFACs 
+mkdir ./gFACs
+
+mkdir eggnog
+mkdir eggnog_database
+braker/eggnog-mapper/download_eggnog_data.py -P --data_dir eggnog_database -M  -H -d  33090 -y
+export EGGNOG_DATA_DIR=.../eggnog_database
+wget -P braker http://github.com/bbuchfink/diamond/releases/download/v2.0.13/diamond-linux64.tar.gz
+tar xzf diamond-linux64.tar.gz
+
+######do first eggnog, this one works
+emapper.py --override --cpu 100 -i Fe_cDNA_gfffile_default.fasta --output Fe_default --output_dir eggnog -m diamond --itype CDS --decorate_gff /braker/tsebra_results_RNA_proteins_default.gff
+
+# --target_taxa 33090
+
+##now can filter with gFAC 
+perl gFACs.pl -f braker_2.1.2_gtf -p default_gFACs_entap_unique --rem-all-incompletes --entap-annotation braker/eggnog/Fe_default.emapper.annotations --fasta braker/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta -get-fasta-without-introns --rem-genes-without-start-and-stop-codon --entap-annotation --unique-genes-only --annotated-all-genes-only --create-gtf --get-fasta --distributions exon_lengths intron_lengths CDS_lengths gene_lengths exon_position intron_position --compatibility stringtie_1.3.6_gtf --create-gff3 --get-protein-fasta --statistics -O . braker/tsebra_results_RNA_proteins_default.gtf
+
+####egggnog after gFACS to have funcitonal annotaiton!!
+emapper.py --override --cpu 100 -i ./gFACs/default_gFACs_entap_unique_genes.fasta --output Fe_default_after_gFACs --output_dir eggnog_after_gFACs -m diamond --itype CDS --decorate_gff braker/gFACs/default_gFACs_entap_unique_out.gff3
+###this to get the gff3 but you can get it directly in gFACs
+gffread -g braker/genome_masked_new/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.masked default_gFACs_entap_unique_stringtie_1.3.6.gtf  -w braker/gFACs/default_gFACs_entap_unique_CDS.fasta -F
+
+
+
+############################
+##6. PSEUDOCHROMOSOMES
+############################
+####use syri https://schneebergerlab.github.io/syri/scaforder.html
+git clone https://github.com/rhysf/Synima.git
+wget -P /users/sfo503/scratch/genome/comparison_ash_genomes/ https://zenodo.org/record/5176117/files/Fpennsylvanica_v1.4_genes.gff?download=1
+wget -P /users/sfo503/scratch/genome/comparison_ash_genomes/ https://zenodo.org/record/5176117/files/Fpennsylvanica_v1.4_genes_AA.fa.gz?download=1
+wget -P /users/sfo503/scratch/genome/comparison_ash_genomes/ https://zenodo.org/record/5176117/files/Fpennsylvanica_v1.4_genes_CDS.fa.gz?download=1
+
+minimap2 -ax asm5 --eqx pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta Fraxinus_pennsylvanica_genome.v1.4.scaffoldsOver10k.fasta -t $SLURM_CPUS_PER_TASK > blast/mapping_F.pennyslvanica_to_canu_purge_pilon.sam
+samtools view -b blast/mapping_F.pennyslvanica_to_canu_purge_pilon.sam -o blast/mapping_F.pennyslvanica_to_canu_purge_pilon.bam
+samtools sort blast/mapping_F.pennyslvanica_to_canu_purge_pilon.bam -o blast/mapping_F.pennyslvanica_to_canu_purge_pilon_sorted.bam
+samtools index /users/sfo503/scratch/genome/blast/mapping_F.pennyslvanica_to_canu_purge_pilon.bam
+PATH_TO_SYRI=blast/syri/syri/bin/syri
+PATH_TO_chroder=blast/syri/syri/bin/chroder
+PATH_TO_PLOTSR=blast/syri/syri/bin/plotsr
+
+
+ntJoin assemble target=pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta target_weight=1 references=Fraxinus_pennsylvanica_genome.v1.4.scaffoldsOver10k.fasta reference_weights='2' k=32 w=21 time=True mkt=True agp=True noCut=True
+###moved to folder ntJoin_syri_k32_w32_n2
+####
+nucmer -c 500 -b 500 -l 100 --maxmatch Fraxinus_pennsylvanica_genome.v1.4.scaffoldsOver10k.fasta ntJoin_syri_k32_w32_n2/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.k32.w32.n2.assigned.scaffolds.fa
+cp out.delta > ntJoin_for_syri_k32_w32_n2.delta
+#####filter reads to 90% identity and lenght 100 bp 
+delta-filter -i 90 -l 100 -m ntJoin_for_syri_k32_w32_n2.delta  > ntJoin_for_syri_k32_w32_n2_i90_100.delta
+show-coords -THrd ntJoin_for_syri_k32_w32_n2_i90_100.delta > F.pennsylvanica_F.excelsior_ntJoin_for_syri_k32_w32_n2$
+
+
+
+###first reorder fasta assigned to order here 
+samtools faidx  ntJoin_syri_k32_w32_n2/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.k32.w32.n2.assigned.scaffolds.fa
+samtools faidx  ntJoin_syri_k32_w32_n2/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.k32.w32.n2.assigned.scaffolds.fa $(cat order_syri.txt) >  ntJoin_syri_k32_w32_n2/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.k32.w32.n2.assigned.scaffolds_ordered.fa
+####for pennsylvanica
+samtools faidx Fraxinus_pennsylvanica_genome.v1.4.scaffoldsOver10k.fasta
+samtools faidx Fraxinus_pennsylvanica_genome.v1.4.scaffoldsOver10k.fasta $(cat order_pennsylvanica.txt) > Fraxinus_pennsylvanica_genome.v1.4.scaffoldsOver10k_ordered.fasta
+mummerplot -f -p plot_F.pennsylvanica_F.excelsior_k32_w32_n2 --large --png ntJoin_for_syri_k32_w32_n2.delta -R Fraxinus_pennsylvanica_genome.v1.4.scaffoldsOver10k_ordered.fasta -Q ntJoin_syri_k32_w32_n2/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.k32.w32.n2.assigned.scaffolds_ordered.fa -c
+
+
+############################
+###7. SYNIMA
+############################
+git clone https://github.com/rhysf/Synima.git
+mkdir comparison_ash_genomes
+wget -P comparison_ash_genomes/ https://zenodo.org/record/5176117/files/Fpennsylvanica_v1.4_genes.gff?download=1
+wget -P comparison_ash_genomes/ https://zenodo.org/record/5176117/files/Fpennsylvanica_v1.4_genes_AA.fa.gz?download=1
+wget -P comparison_ash_genomes/ https://zenodo.org/record/5176117/files/Fpennsylvanica_v1.4_genes_CDS.fa.gz?download=1
+##check here https://github.com/rhysf/Synima
+##change names sequences in fasta cds and pep in excelsior
+gzip -d Fpennsylvanica_v1.4_genes_AA.fa.gz
+gzip -d Fpennsylvanica_v1.4_genes_CDS.fa.gz
+sed -e 's/>ID=/>/' F.excelsior/F.excelsior.annotation.cds.fa > F.excelsior.annotation.cds
+sed -e 's/>ID=/>/'  F.excelsior/F.excelsior.annotation.fa > F.excelsior.annotation.pep
+awk '/^>/ {$0=$1} 1' F.pennsylvanica/F.pennsylvanica.annotation.cds > F.pennsylvanica/F.pennsylvanica.annotation2.cds
+sed -e 's/mRNA/mRNA_t/' F.pennsylvanica/F.pennsylvanica.annotation.gff > F.pennsylvanica/F.pennsylvanica.annotation.2.gff
+sed -e 's/gene/mRNA/' F.pennsylvanica/F.pennsylvanica.annotation.2.gff > F.pennsylvanica/F.pennsylvanica.annotation.3.gff
+
+
+perl Synima/util/Create_full_repo_sequence_databases.pl -r comparison_ash_genomes/Repo_spec.txt -v
+sed -e 's/.t1//' Repo_spec.txt.all.GFF3 > Repo_spec.txt.all.2.GFF3
+perl Synima/util/Blast_grid_all_vs_all.pl -r comparison_ash_genomes/Repo_spec.txt -t CDS
+perl Synima/util/Blast_all_vs_all_repo_to_OrthoMCL.pl  -r comparison_ash_genomes/Repo_spec.txt -t CDS 
+###summarise results 
+####orthoFinder
+perl Synima/util/Orthologs_to_summary.pl -o ./Orthofinder_outdir/Orthogroups.csv -t Orthofinder -d Orthofinder_outdir -r comparison_ash_genomes/Repo_spec.txt
+perl Synima/util/DAGchainer_from_gene_clusters.pl -c ./GENE_CLUSTERS_SUMMARIES.Orthofinder/GENE_CLUSTERS_SUMMARIES.clusters -r /users/sfo503/scratch/genome/comparison_ash_genomes/Repo_spec.txt -v -i 2
+###use outputs from DAGchainer
+perl Synima/SynIma.pl -a ./GENE_CLUSTERS_SUMMARIES.Orthofinder/Repo_spec.txt.dagchainer.aligncoords -b  ./GENE_CLUSTERS_SUMMARIES.Orthofinder/Repo_spec.txt.dagchainer.aligncoords.spans
+###resave Synima-outdir to Synima-outdir_CDS_orthofinder
+
+
+############################
+###8.CHORD PLOT
+############################
+#####length chromosomes in pennsylvanica for R plots
+awk 'BEGIN{FS="{> }"} /^>/{val=$2;next} {print val, length($0)}' Fraxinus_pennsylvanica_genome.v1.4.scaffoldsOver10k.fasta
+bioawk -c fsatx '{ print $name, length($seq) } ' < Fraxinus_pennsylvanica_genome.v1.4.scaffoldsOver10k.fasta
+
+############################
+###9CIRCULAR PLOT
+############################
+######calculate coverage genome
+#####coverage
+###need to map to genome
+minimap2 -t $SLURM_CPUS_PER_TASK -ax map-ont pilon/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta unmapped_mitochondria_round2.fq > mapping_unmapped_mito_to_genome.sam
+samtools view -S -bo -h mapping_unmapped_mito_to_genome.sam -o mapping_unmapped_mito_to_genome.bam
+samtools sort -m 1G mapping_unmapped_mito_to_genome.bam -o mapping_unmapped_mito_to_genome_sorted.bam
+samtools index mapping_unmapped_mito_to_genome_sorted.bam
+#######for coverage
+###do only mRNA ###only genes
+awk ' {print $1,$4,$5,$7,$9}' /users/sfo503/scratch/genome/braker/gFACs/default_gFACs_entap_unique_out_onlymRNA.txt  > /users/sfo503/scratch/genome/braker/gFACs/default_gFACs_entap_unique_out_onlymRNA_2.txt    
+samtools faidx /users/sfo503/scratch/genome/braker/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta
+sed 's/ /\t/g' /users/sfo503/scratch/genome/braker/gFACs/default_gFACs_entap_unique_out_onlymRNA_2.txt > /users/sfo503/scratch/genome/braker/gFACs/default_gFACs_entap_unique_out_onlymRNA_3.txt
+bedtools nuc -fi /users/sfo503/scratch/genome/braker/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta -bed /users/sfo503/scratch/genome/braker/gFACs/default_gFACs_entap_unique_out_onlymRNA_3.txt > GC_content_for_each_gene_genome.txt
+
+
