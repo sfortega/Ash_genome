@@ -1,0 +1,282 @@
+#############Associative transcriptomics
+#############PART 1 
+############# GEMs
+# Set working directory
+setwd("")
+
+winDialog("ok", "Please select your trait file")
+#Regress point identifier
+data.temp <- choose.files(default = "", caption = "trait data file",
+                          multi = TRUE, filters = Filters,
+                          index = nrow(Filters))
+
+#data <- as.data.frame(data[,-1])
+#numt <- ncol(data)
+
+##TPM data and traits is a table with names in the first column and damage score in the second, column names are Taxa &	DamageScore
+print("reading files...")
+data <- read.table ("annota_file_damage.txt", header=TRUE, row.names=1)
+#Read in delimited files with sequence names and tpm values
+rpkmA.temp <- read.table ("Danish_RPKM.txt", header=TRUE, sep= "\t", row.names=1)
+##remove low rpkm means
+meansA <- rowMeans(rpkmA.temp) 
+meansA <-as.data.frame(meansA)
+keepvarsA <- subset(meansA, meansA >= 0.4) 
+keepvarsA <- row.names(keepvarsA)
+delrpkmA <- rpkmA.temp[keepvarsA,]
+
+print("formatting data...")
+#Convert to numeric
+numrpkmA <-data.matrix(rpkmA.temp)
+
+
+#transpose matrix
+print("transposing matrices...")
+
+rpkmA <- t(delrpkmA)
+
+
+
+##Data now numeric matrix with useless markers and lines deleted
+
+#Merge datasets
+print("merging datasets...")
+
+#rpkmmergeA.temp <- cbind (newrpkmA, data$Trait)
+#dimnamesA <- c(colnames(newrpkmA), "Trait")
+#rpkmmergeA <-rpkmmergeA.temp[!(rownames(rpkmmergeA.temp) %in% c("Line")),]
+#colnames(rpkmmergeA) <- dimnamesA
+
+rpkmmergeA.temp <- merge(data, rpkmA, by="row.names")
+
+rownames(rpkmmergeA.temp)<- rpkmmergeA.temp[,1]
+rpkmmergeA.temp=rpkmmergeA.temp[,c(2:31475)] ###check this later
+
+####from Tassel
+####need to create a table with Q matrix columns (x2), traits (x1) and TPMs
+Q <- read.delim("Danish_Q_matrix_new_to_use.txt", header=T)
+rownames(Q) <- Q$Taxa
+numq <- ncol(Q)-1
+rpkmmergeA.temp2 <- merge(Q, rpkmmergeA.temp, by="row.names")
+rpkmmergeA <- rpkmmergeA.temp2[,-1]
+rownames(rpkmmergeA) <- rpkmmergeA.temp2$Row.names
+#rpkmmergeA <- rpkmmergeA[,-1]
+#rpkmmergeA <- rpkmmergeA[,-3]
+rpkmmergeA=rpkmmergeA[,c(2:31477)]
+#total cols before expression data
+numt <- 3####modify it
+#first column of trait data
+tstart <- 3 ###modified it
+#first column of expression data
+estart <- 4 ##modified
+
+
+
+for (p in (tstart):(numtot)){
+  outputName = colnames(rpkmmergeA[p])
+  
+  ##Create empty dataframe for results to go into
+  resultsA <- as.data.frame(matrix(nrow = 0, ncol = 5))
+  colnames(resultsA) <- c("Df", "Sum_Sq", "Mean_Sq", "F_value", "Pr(>F)")
+  
+  h=ncol(rpkmmergeA)
+  
+  ###CAUTION The model needs adapting for k values in Q matrix other than 2! 
+  
+  #"for" looped lm
+  for (i in estart:h){lmA <- lm(rpkmmergeA[,p] ~ rpkmmergeA[,i]+rpkmmergeA[,2])
+  anovaA <- as.data.frame(anova(lmA))
+  anovaA2 <- anovaA[1,]
+  coefficients <- lmA$coefficients
+  intercept = coefficients[1]
+  intercept2 <- as.data.frame(intercept)
+  gradient = coefficients[2]
+  gradient2 <- as.data.frame(gradient)
+  #include R2
+  R2 <- summary(lmA)$r.squared
+  R2 <- as.data.frame(R2)
+  anovaA2_1 <- cbind(anovaA2, R2)
+  anovaA3 <- cbind(anovaA2_1, intercept2)
+  anovaA4 <- cbind(anovaA3, gradient2)
+  resultsA <-rbind(resultsA, anovaA4)
+  }
+  
+  
+  #Apply Genomic Inflation correction
+  n <- nrow(rpkmmergeA.temp)
+  n=n-1
+  
+  F <- resultsA$"F value"
+  lambda <- median(F/(qf(0.5,1,n)))
+  AdjF <- F/lambda
+  adjPvalue <- pf(AdjF, 1, n, lower.tail = FALSE)
+  
+  resultsA$"Pr(>F)" <- adjPvalue
+  resultsA$log10PA <- -log10(resultsA$"Pr(>F)")
+  
+  dims2 <- colnames((rpkmmergeA)[estart:h])
+  rownames(resultsA) <- dims2
+  
+  ##Add column with log10P calculated
+  #log10PA <- (-log10(resultsA[,5]))
+  #resultsA2 <- cbind(resultsA, log10PA)
+  #rownames(resultsA)= dims2
+  
+  #Rank order the results and apply FDR
+  #Order
+  resultsA3 <- resultsA[order(resultsA[,5]),]
+  #Add rank
+  v=nrow(resultsA3)
+  rank <- gl(v, 1)
+  resultsA3$rank <- as.numeric(rank)
+  #Calculate FDR
+  resultsA3$FDR <- resultsA3$"Pr(>F)"*(v/resultsA3$rank)
+  
+  sub <- subset(resultsA3$log10P, resultsA3$"FDR"<0.05)
+  line <- min(sub)
+  #line2 <- -log10(0.05/(nrow(resultsA)))
+  
+  AresultsFile = paste("GEM_", paste(outputName, collapse="-"), ".txt", sep="")
+  write.table(resultsA3, AresultsFile, quote=FALSE, sep="\t" ,row.names=FALSE)
+  print(paste(p-numq, "of", numt, "traits completed"))
+}
+
+print ("All traits completed...")
+resultsA3$names=rownames(resultsA3)
+write.table(resultsA3,"results_GEMs_1.txt",row.names = T,col.names = T,sep="\t",dec=".")
+
+
+
+
+#############PART 2
+#############ANNOTATION AND PLOTS
+setwd ("")
+Gems <- read.delim("GEMs_disease.txt", header = T,row.names=1)
+annotation=read.table("Fe_default_after_gFACs.emapper.annotation.txt", header=T, sep="\t", quote="")
+annotation$query=sub("ID=", "", annotation$query)
+Gems$Genes<-rownames(Gems)
+library(tidyverse)
+Gems_annota=left_join(Gems, annotation, by=c("Genes"="query"))
+write.table(Gems_annota,"GEMs_disease_annotated.txt",col.names = T,sep="\t",dec=".")
+
+
+##plot
+
+results <- read.delim("GEMs_disease.txt", header = T,row.names=1)
+results$Genes<-rownames(results)
+bon <- 0.05/nrow(results)
+passFDR <- subset(results, results$FDR <= 0.05)
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+cbPalette24<-rep(cbPalette,3)
+
+library(tidyverse)
+library(ggplot2)
+
+####bonferroni
+bon <- 0.05/nrow(results)
+passFDR <- subset(results, results$FDR <= 0.05)
+
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+cbPalette24<-rep(cbPalette,3)
+chromosome_order=read.table("pseudo_order.txt",header = F)
+chromosome_order_vector=as.vector(chromosome_order$V1)
+
+###bedtools between gff3 genoems and pseudochromosomes 
+pseudochromosomes=read.table("pseudo_genes") #####Done in bedtools
+pseudo=subset(pseudochromosomes, pseudochromosomes$V5=="mRNA")
+pseudo[c("Genes", "Genes1")] <- do.call(rbind, strsplit(pseudo$V9, ";"))
+pseudo$Genes=sub("ID=+","",pseudo$Genes)
+pseudo_chro=left_join(pseudo, chromosome_order, by=c("V14"="V1"))
+results_pseudo=left_join(pseudo_chro,results, by=c("Genes"= "Genes"))
+results_pseudo2=results_pseudo[!is.na(results_pseudo$T_value),]
+
+
+
+chromosome_order_vector=chromosome_order[order(chromosome_order[,2]),]
+chromosome_order_vector2=chromosome_order_vector[c(1,12,17,18,19,20,21,22,23,2,3,4,5,6,7,8,9,10,11,13,14,15,16),]
+chromosome_order_vector2[24,]=c("Unassigned", "Unassigned")
+results_pseudo2$V2.y[is.na(results_pseudo2$V2.y)]<-c("Unassigned")
+results_pseudo2$V2.y = factor(results_pseudo2$V2.y, levels=c(chromosome_order_vector2$V2))
+
+###
+passFDR_pseudo=left_join(pseudo_chro,passFDR, by=c("Genes"= "Genes"))
+passFDR_pseudo2=passFDR_pseudo[!is.na(passFDR_pseudo$T_value),]
+passFDR_pseudo2$V2.y[is.na(passFDR_pseudo2$V2.y)]<-c("Unassigned")
+passFDR_pseudo2$V2.y = factor(passFDR_pseudo2$V2.y, levels=c(chromosome_order_vector2$V2))
+
+
+tiff("plot_GEMS_contig_pseudochromosome_cols_disease.tiff",res=300,units="mm",he=100,wi=680)
+ggplot(results_pseudo2, aes(x = V17, y = -log10(FDR)))+
+  geom_point(data=results_pseudo2, aes(x = V17, y = -log10(FDR),color=V2.y),show.legend = FALSE)+
+ geom_point(data = passFDR_pseudo2, aes(x = V17, y = -log10(FDR)), color="#333333",size=4)+
+  geom_hline(yintercept = -log10(bon), linetype = "dashed", size = 1)+
+  theme(axis.ticks.x = element_blank(),  panel.background = element_blank(), axis.line = element_line(), axis.text.x = element_blank(), axis.text.y = element_text(size = 12, color = "black"), axis.title.x = element_text(size=10), axis.title.y = element_text(size=10))+
+  xlab("Pseudochromosome")+scale_colour_manual(values=cbPalette24)+
+  ylab("GEMs (-log10(FDR))") + facet_grid(~V2.y, scales="free")
+dev.off()
+
+
+#############PART 3
+#############Regression between disease and TPMs
+setwd ("")
+
+library(ggplot2)
+library(ggpmisc)
+traits <- read.table ("annota_file_damage.txt", header=TRUE)
+#Read in delimited files with sequence names and tpm values
+rpkm<-read.delim ("Danish_RPKM.txt", header=TRUE, sep= "\t")
+
+rownames(traits)<-traits$Taxa
+rpkm$Genes<-rownames(rpkm)
+GEMs=as.data.frame(c("Fe_g19663","Fe_g22999","Fe_g40353"))
+colnames(GEMs)=c("Gene")
+my_list=split(GEMs,f=list(GEMs$Gene))
+
+
+
+my.formula <- y ~ x
+
+colors<-colorRampPalette(c("black", "009E73"))(4)
+[1] "#000000" "#343434" "#696969" "#9E9E9E"
+
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+library(multcomp)
+library(FSA)
+library(ggpubr)
+library(rcompanion)
+
+setwd ("plots_regression")
+
+rpkm2<-list()
+rpkmmerge<-list()
+colNames<-list()
+
+
+for (i in names (my_list)) {rpkm2[[i]]<-subset(rpkm, rpkm$Genes == i)
+rownames(rpkm2[[i]])<-rpkm2[[i]]$Genes
+rpkm2[[i]]<-rpkm2[[i]][,c(1:182)]
+rpkm2[[i]] <- t(rpkm2[[i]])
+rpkmmerge[[i]]<-merge(rpkm2[[i]],traits,by="row.names",all.x=TRUE)
+rownames(rpkmmerge[[i]])<-rpkmmerge[[i]]$Row.names
+rpkmmerge[[i]] <- rpkmmerge[[i]][complete.cases(rpkmmerge[[i]]),]
+###colNames [[i]] <- rpkmmerge[[1]][,c(2,4)]
+
+xlabel=substitute(expr = paste("Expression ", i, " (TPMs)"), 
+                      env = list(i=i))
+
+ylim1=max(rpkmmerge[[i]]$DamageScore, na.rm=T)*1.5
+ylim2=max(rpkmmerge[[i]]$DamageScore, na.rm=T)*1.2
+ylim3=min(rpkmmerge[[i]]$DamageScore, na.rm=T)*1.5
+tiff(filename = paste(i,".tiff"),res=300,units="mm",he=120,wi=120)
+p=(ggscatter(rpkmmerge[[i]], x = i, y = "DamageScore",          
+ add = "reg.line",add.params = list(color = "black", fill = "lightgray"), conf.int = FALSE, color="DamageScore",size =6,  cor.coef = FALSE, cor.coef.size = 0,
+          cor.coeff.args = list(label.y = ylim2), xlab = xlabel, ylab="Damage Score")+ gradient_color(c("#009E73","#343434","black"))+
+  stat_cor(label.y=c(ylim2), method = "spearman",size = 8)+ylim(ylim3, ylim1)+theme( text = element_text(size =19)))
+
+
+print(p)
+dev.off()
+}
+
