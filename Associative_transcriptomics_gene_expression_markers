@@ -266,17 +266,14 @@ rpkmmerge[[i]] <- rpkmmerge[[i]][complete.cases(rpkmmerge[[i]]),]
 xlabel=substitute(expr = paste("Expression ", i, " (TPMs)"), 
                       env = list(i=i))
 
-ylim1=max(rpkmmerge[[i]]$DamageScore, na.rm=T)*1.5
-ylim2=max(rpkmmerge[[i]]$DamageScore, na.rm=T)*1.2
-ylim3=min(rpkmmerge[[i]]$DamageScore, na.rm=T)*1.5
+ylim2=max(rpkmmerge[[i]]$DamageScore, na.rm=T)*1.15
 tiff(filename = paste(i,".tiff"),res=300,units="mm",he=120,wi=120)
 p=(ggscatter(rpkmmerge[[i]], x = i, y = "DamageScore",          
  add = "reg.line",add.params = list(color = "black", fill = "lightgray"), conf.int = FALSE, color="DamageScore",size =6,  cor.coef = FALSE, cor.coef.size = 0,
           cor.coeff.args = list(label.y = ylim2), xlab = xlabel, ylab="Damage Score")+ gradient_color(c("#009E73","#343434","black"))+
-  stat_cor(label.y=c(ylim2), method = "spearman",size = 8)+ylim(ylim3, ylim1)+theme( text = element_text(size =19)))
+  stat_cor(label.y=c(ylim2), method = "spearman",size = 8)+ylim(ylim3, ylim1)+theme( text = element_text(size =19)))+scale_y_continuous(breaks=c(0,25,50,75,100),limits = c(0,120))
 
 
 print(p)
 dev.off()
 }
-
