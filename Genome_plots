@@ -42,15 +42,15 @@ write.table(genes_contigs_to_plot_sub,"plot_circular/genes_contigs_to_plot_sub.t
 ###########GC content
 GC=fread("plot_circular/GC_content_for_each_gene_genome.txt",header=T,sep="\t")
 GC=GC[,c(4,12)]
-####356066 2
+
 genes_contigs_GC=left_join(genes_contigs,GC,by=c("Gene"="4_usercol"))
 genes_contigs_GC_pseudo=left_join(genes_contigs_GC,ntJoin_to_ps,by=c("ntJoin"="Scaffold"))
-####356066 19
+
 
 genes_contigs_GC_pseudo_contig_mean=genes_contigs_GC_pseudo %>%   group_by(Gene) %>%summarise_at(vars("12_pct_gc"), list(name = mean))
 #43392 2
 GC_to_plot=left_join(genes_contigs_GC_pseudo,genes_contigs_GC_pseudo_contig_mean,by="Gene")
-#43392 20
+
 GC_to_plot_subset=GC_to_plot[,c(19,16,17,20)] 
 ###Pseudochromosome, start contig in pseudochromosome, end contig in pseudochromosome, %GC in each gene
 write.table(GC_to_plot_subset,"plot_circular/GC_in_each_gene_4columns.txt",col.names=T,sep="\t",row.names=F)
@@ -59,8 +59,7 @@ write.table(GC_to_plot_subset,"plot_circular/GC_in_each_gene_4columns.txt",col.n
 
 ############methylation
 methylation=fread("plot_circular/all_methylation_data_genome_Ash_frequency_complete_new.tsv",header=T,sep="\t")
-dim(methylation)
-#[1] 14361637        8
+
 
 methylation_contig=left_join(methylation,contigs,by=c("chromosome"="contig"))
 methylation_contig$methylation_start_pseudo=methylation_contig$start+methylation_contig$start_tig_pseudochromosome
@@ -99,12 +98,8 @@ write.table(coverage_pseudo_to_plot_subset,"plot_circular/coverage_pseudo_to_plo
 ############TE
 TE=fread("plot_circular/genomepilon_genome_purge_haplotigs_canu_purge_repeats_LTR_m200_a80_to_Nextera.fasta.mod.EDTA.TEanno.gff3",header=T,sep="\t")
 TE_LTR=TE[grep("LTR", TE$Description),]
-
-dim(TE_LTR)
-#[1] 347220 9
 TE_TIR=TE[grep("TIR", TE$Description),]
- dim(TE_TIR)
-#[1] 468858      9
+
 
 TE_LTR=TE_LTR[,c(1,4,5,7)]
 TE_LTR$contig=sub("_p","_pilon",TE_LTR$contig)
