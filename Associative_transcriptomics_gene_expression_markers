@@ -10,8 +10,6 @@ data.temp <- choose.files(default = "", caption = "trait data file",
                           multi = TRUE, filters = Filters,
                           index = nrow(Filters))
 
-#data <- as.data.frame(data[,-1])
-#numt <- ncol(data)
 
 ##TPM data and traits is a table with names in the first column and damage score in the second, column names are Taxa &	DamageScore
 print("reading files...")
