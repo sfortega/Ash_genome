@@ -1,0 +1,98 @@
+####Compare new F.excelsior genome vs old F. excelsior genome Sollars et al. 2016
+#Sollars ESA, Harper AL, Kelly LJ, Sambles CM, Ramirez-Gonzalez RH, Swarbreck D, Kaithakottil G, Cooper ED, Uauy C, Havlickova L, et al. 2016. Genome sequence and genetic diversity of European ash trees. Nature. 541:212–216. doi:10.1038/nature20786.
+
+
+#####BLASTn of cds models
+makeblastdb -in Fraxinus_excelsior_38873_TGAC_v2.gff3.cds.fa -out Fe_old -dbtype nucl -title Fe_old -parse_seqids
+####header is qseqid  sseqid  3 pident   4  length  5  mismatch  6  gapopen 7  qstart 8  qend 9 sstart 10 send 11 evalue 12 bitscore
+blastn -query F.excelsior.annotation.cds  -db /mnt/scratch/users/sfo503/ash/Fe_old -outfmt 6 -max_target_seqs 1 > blast_results_query_new_cds
+awk '{print $1}' blast_results_query_new_cds > blast_results_query_new2_cds
+awk 'NR==FNR{a[$0]=1;next}a[$9]' blast_results_query_new2_cds F.excelsior_ONT_annotation.8> matches_query_new2_cds
+grep -vFf <(cut -f1 -d' ' "matches_query_new2_cds") "F.excelsior_ONT_annotation.8" > excess_genes_matches_query_new2_cds
+
+
+
+
+######GO enrichment
+setwd ("")
+genes=read.table("excess_genes_matches_query_new2_cds",header=F, sep="\t")
+header=c("contig","start","end","NA","NA2","NA3","strand","NA4","Gene")
+colnames(genes)<-header
+
+library(topGO)
+library(stringr)
+library(ALL)
+setwd("")
+geneID2GO <- readMappings(file = "Y:/rsrch/ah1309/lab/Sara/Ash_paper/AT/GOs_all_genes.txt")
+geneNames<-names(geneID2GO)
+annotation=read.table("Y:/rsrch/ah1309/lab/Sara/Ash_paper/AT/UK/Fe_default_after_gFACs.emapper.annotation.txt", header=T, sep="\t", quote="")
+annotation$query=sub("ID=", "", annotation$query)
+Gene_factor=as.factor(genes$Gene)
+Gene_factor<-factor(as.integer(geneNames %in% Gene_factor))
+names(Gene_factor)<-geneNames
+
+####MF
+
+GOdata <- new("topGOdata", ontology = "MF", allGenes = Gene_factor, annot = annFUN.gene2GO, gene2GO = geneID2GO,geneSel=myself,nodeSize=5)
+resultFISHER <- runTest(GOdata, algorithm = "weight01", statistic = "fisher")
+allGO=usedGO(GOdata)
+allres=GenTable(GOdata,weightFisher=resultFISHER,orderBy="weightFisher",topNodes=length(allGO))
+padj=round(p.adjust(allres$weightFisher,method="fdr"),digits=4)
+all_res_final<-cbind(allres,padj)
+all_res_final=all_res_final[order(all_res_final$padj),]
+all_res_final_p=all_res_final[which(all_res_final$weightFisher<=0.01),]
+all_res_final_fdr=all_res_final[which(all_res_final$padj<=0.05),]
+write.table(all_res_final[1:50,],"summary_topGO_analysis_MF_excess_genes.txt",sep="\t",row.names=T,col.names=T,dec=".")
+Genes_subset=as.data.frame(genes$Gene)
+colnames(Genes_subset)<-c("Genes")
+Genes_subset_join=left_join(Genes_subset,annotation,by=c("Genes"="query"))
+match=Genes_subset_join  %>% 
+  mutate(Matched = ifelse(str_detect(GOs, paste(all_res_final_p$GO.ID, collapse = "|")), "Yes", "No"))
+Genes_reg_BP=subset(match, match$Matched=="Yes")
+Genes_reg_BP=as.data.frame(Genes_reg_BP)
+write.table(Genes_reg_BP,"GO_MF_genes_excess_genes.txt",quote=F,sep="\t",row.names=T,col.names=T,dec=".")
+
+####BP
+
+GOdata <- new("topGOdata", ontology = "BP", allGenes = Gene_factor, annot = annFUN.gene2GO, gene2GO = geneID2GO,geneSel=myself,nodeSize=5)
+resultFISHER <- runTest(GOdata, algorithm = "weight01", statistic = "fisher")
+allGO=usedGO(GOdata)
+allres=GenTable(GOdata,weightFisher=resultFISHER,orderBy="weightFisher",topNodes=length(allGO))
+padj=round(p.adjust(allres$weightFisher,method="fdr"),digits=4)
+all_res_final<-cbind(allres,padj)
+all_res_final=all_res_final[order(all_res_final$padj),]
+all_res_final_p=all_res_final[which(all_res_final$weightFisher<=0.01),]
+all_res_final_fdr=all_res_final[which(all_res_final$padj<=0.05),]
+write.table(all_res_final[1:100,],"summary_topGO_analysis_BP_excess_genes.txt",sep="\t",row.names=T,col.names=T,dec=".")
+Genes_subset=as.data.frame(genes$Gene)
+colnames(Genes_subset)<-c("Genes")
+Genes_subset_join=left_join(Genes_subset,annotation,by=c("Genes"="query"))
+match=Genes_subset_join  %>% 
+  mutate(Matched = ifelse(str_detect(GOs, paste(all_res_final_p$GO.ID, collapse = "|")), "Yes", "No"))
+Genes_reg_BP=subset(match, match$Matched=="Yes")
+Genes_reg_BP=as.data.frame(Genes_reg_BP)
+write.table(Genes_reg_BP,"GO_BP_genes_excess_genes.txt",quote=F,sep="\t",row.names=T,col.names=T,dec=".")
+
+
+####CC
+
+GOdata <- new("topGOdata", ontology = "CC", allGenes = Gene_factor, annot = annFUN.gene2GO, gene2GO = geneID2GO,geneSel=myself,nodeSize=5)
+resultFISHER <- runTest(GOdata, algorithm = "weight01", statistic = "fisher")
+allGO=usedGO(GOdata)
+allres=GenTable(GOdata,weightFisher=resultFISHER,orderBy="weightFisher",topNodes=length(allGO))
+padj=round(p.adjust(allres$weightFisher,method="fdr"),digits=4)
+all_res_final<-cbind(allres,padj)
+all_res_final=all_res_final[order(all_res_final$padj),]
+all_res_final_p=all_res_final[which(all_res_final$weightFisher<=0.01),]
+all_res_final_fdr=all_res_final[which(all_res_final$padj<=0.05),]
+write.table(all_res_final[1:50,],"summary_topGO_analysis_CC_excess_genes.txt",sep="\t",row.names=T,col.names=T,dec=".")
+Genes_subset=as.data.frame(genes$Gene)
+colnames(Genes_subset)<-c("Genes")
+Genes_subset_join=left_join(Genes_subset,annotation,by=c("Genes"="query"))
+match=Genes_subset_join  %>% 
+  mutate(Matched = ifelse(str_detect(GOs, paste(all_res_final_p$GO.ID, collapse = "|")), "Yes", "No"))
+Genes_reg_BP=subset(match, match$Matched=="Yes")
+Genes_reg_BP=as.data.frame(Genes_reg_BP)
+write.table(Genes_reg_BP,"GO_CC_genes_excess_genes.txt",quote=F,sep="\t",row.names=T,col.names=T,dec=".")
+
+
